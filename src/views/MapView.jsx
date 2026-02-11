@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Search } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
@@ -22,11 +22,11 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const MapView = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
-  // 2. ADD THESE MISSING STATES
+  // 2. STATES
   const [selectedBarangay, setSelectedBarangay] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 3. ADD THIS MISSING FUNCTION
+  // 3. FUNCTION
   const handleViewProfile = (barangay) => {
     setSelectedBarangay(barangay);
     setIsModalOpen(true);
@@ -105,35 +105,38 @@ const MapView = () => {
   );
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-8 h-full shadow-sm flex flex-col">
+    // MAIN WRAPPER
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-8 h-full shadow-sm flex flex-col transition-colors duration-300">
+      
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-black text-[#0D2440]">Municipality Map</h1>
-          <p className="text-sm text-[#7BA4D0]">Catarman, Northern Samar • Barangay Geotagging</p>
+          <h1 className="text-2xl font-black text-[#0D2440] dark:text-white transition-colors">Municipality Map</h1>
+          <p className="text-sm text-[#7BA4D0] dark:text-slate-400 transition-colors">Catarman, Northern Samar • Barangay Geotagging</p>
         </div>
 
         {/* SEARCH BAR & BADGE */}
         <div className="flex items-center gap-4">
           <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7BA4D0] group-focus-within:text-[#0D2440] transition-colors" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7BA4D0] dark:text-slate-400 group-focus-within:text-[#0D2440] dark:group-focus-within:text-white transition-colors" />
             <input
               type="text"
               placeholder="Find Barangay..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-[#0D2440] placeholder-[#7BA4D0]/60 outline-none focus:ring-2 focus:ring-[#0D2440]/10 w-64 transition-all"
+              className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm font-bold text-[#0D2440] dark:text-white placeholder-[#7BA4D0]/60 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500/50 w-64 transition-all"
             />
           </div>
 
-          <span className="bg-emerald-50 text-emerald-600 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border border-emerald-100">
+          <span className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border border-emerald-100 dark:border-emerald-800/50 transition-colors">
             {filteredBarangays.length} / {barangays.length} Visible
           </span>
         </div>
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 rounded-2xl overflow-hidden border border-gray-200 shadow-inner relative z-0">
+      {/* Added classes to invert map tiles in dark mode: [&_.leaflet-layer]:dark:invert [&_.leaflet-layer]:dark:hue-rotate-180 */}
+      <div className="flex-1 rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-700 shadow-inner relative z-0 transition-colors duration-300 [&_.leaflet-layer]:dark:invert [&_.leaflet-layer]:dark:hue-rotate-180 [&_.leaflet-layer]:dark:brightness-95">
         <MapContainer
           center={catarmanPosition}
           zoom={13}
@@ -147,6 +150,7 @@ const MapView = () => {
 
           {filteredBarangays.map((brgy) => (
             <Marker key={brgy.id} position={[brgy.lat, brgy.lng]}>
+              {/* Note: Leaflet popups have strict internal CSS, so we keep the text dark for readability against the white popup background */}
               <Popup>
                 <div className="p-1 min-w-[120px]">
                   <span className={`text-[9px] font-bold uppercase tracking-wider ${
@@ -157,7 +161,7 @@ const MapView = () => {
                     {brgy.category}
                   </span>
                   <h3 className="font-black text-[#0D2440] text-sm mb-1">{brgy.name}</h3>
-                  <p className="text-[10px] text-gray-400">Lat: {brgy.lat.toFixed(4)}</p>
+                  <p className="text-[10px] text-gray-500">Lat: {brgy.lat.toFixed(4)}</p>
                   
                   {/* BUTTON TRIGGER */}
                   <button 

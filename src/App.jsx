@@ -1,142 +1,173 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Bell, Search, User, Home, Users, Map, FileText, Menu, LogOut, Loader2, ShieldCheck, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react'; // <-- 1. ADDED useEffect
+import { Bell, Search, User, Home, Users, Map, FileText, Menu } from 'lucide-react';
 import mydoLogo from './assets/mydo logo.png'; 
 import DashboardView from './views/DashboardView';
 import ProfilesView from './views/ProfilesView';
 import MapView from './views/MapView';
-import RequestsView from './views/RequestsView';
-import LoginView from './components/LoginView';
-import SKHomeView from './views/SKHomeView'; 
-import { supabase } from './supabaseClient';
+import ReportsView from './views/ReportsView';
+import SettingsModal from './components/SettingsModal';
+import NotificationModal from './components/NotificationModal';
+import UserSettingsModal from './components/UserSettingsModal';
 
 export default function App() {
   const [isSidebarShrinked, setIsSidebarShrinked] = useState(false);
   const [activeMenu, setActiveMenu] = useState('dashboard');
-  const [session, setSession] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  
+  const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
+  const [userSettingsTab, setUserSettingsTab] = useState('profile');
 
-  const fetchProfile = useCallback(async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+  // --- 2. ADDED DARK MODE STATE ---
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
-      if (error) throw error;
-      setUserProfile(data);
-    } catch (err) {
-      console.error("Auth Profile Error:", err.message);
-      setUserProfile({ role: 'SK', status: 'PENDING' });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // --- 3. ADDED LOGIC TO TELL THE BROWSER TO SWITCH COLORS ---
   useEffect(() => {
-    const timer = setTimeout(() => { if(loading) setLoading(false); }, 5000);
-    
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) fetchProfile(session.user.id);
-      else setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) fetchProfile(session.user.id);
-      else { setUserProfile(null); setLoading(false); }
-    });
-
-    return () => { subscription.unsubscribe(); clearTimeout(timer); };
-  }, [fetchProfile]);
-
-  if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-      <Loader2 className="w-10 h-10 text-[#0D2440] animate-spin mb-4" />
-      <p className="text-[10px] font-black text-[#7BA4D0] uppercase tracking-widest">Initializing...</p>
-    </div>
-  );
-
-  if (!session) return <LoginView />;
-
-  // --- START OF APPROVAL GATE ---
-  // If the user is an SK, check their status first
-  if (userProfile?.role === 'SK') {
-    if (userProfile?.status !== 'APPROVED') {
-      return (
-        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-10 text-center font-sans">
-          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mb-6">
-            <Clock className="w-10 h-10 text-amber-500 animate-pulse" />
-          </div>
-          <h2 className="text-2xl font-black text-[#0D2440] uppercase tracking-tighter">Account Pending Approval</h2>
-          <p className="text-gray-400 max-w-sm mt-2 text-sm">
-            Hello, <strong>{userProfile?.full_name || 'Official'}</strong>. Your SK account has been registered but requires 
-            Admin verification before you can access your dashboard.
-          </p>
-          <button 
-            onClick={() => supabase.auth.signOut()} 
-            className="mt-8 px-10 py-4 bg-[#0D2440] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-red-500 transition-all"
-          >
-            Sign Out
-          </button>
-        </div>
-      );
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
-    // Only show SKHomeView if status is 'APPROVED'
-    return <SKHomeView userProfile={userProfile} />;
-  }
-  // --- END OF APPROVAL GATE ---
+  }, [isDarkMode]);
 
-  // MYDO Admin / Officers see the management UI
+  // Function to open specific tab from the dropdown
+  const handleOpenSettings = (tab) => {
+    setUserSettingsTab(tab);
+    setIsUserSettingsOpen(true);
+    setIsProfileOpen(false); // Close the dropdown menu
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col overflow-hidden font-sans">
-      <header className="flex items-center justify-between px-10 py-6 shrink-0 bg-white/50 backdrop-blur-md border-b border-gray-100">
+    // 4. ADDED 'dark:bg-slate-900' to the main background
+    <div className="h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300 flex flex-col overflow-hidden relative">
+      
+      {/* HEADER - ADDED 'dark:bg-slate-900' */}
+      <header className="flex items-center justify-between px-10 py-6 shrink-0 bg-gray-50 dark:bg-slate-900 transition-colors duration-300 z-20">
         <div className="flex items-center gap-6 flex-1">
-          <button onClick={() => setIsSidebarShrinked(!isSidebarShrinked)} className="hover:bg-gray-200/50 p-2 rounded-lg transition-all">
-            <Menu className="w-6 h-6 text-[#0D2440]" />
+          <button 
+            onClick={() => setIsSidebarShrinked(!isSidebarShrinked)}
+            className="hover:bg-gray-200/50 dark:hover:bg-slate-800 p-2 rounded-lg transition-colors"
+          >
+            <Menu className="w-6 h-6 text-[#0D2440] dark:text-white" />
           </button>
-          <div className="flex flex-col">
-            <span className="text-xl font-black text-[#0D2440] uppercase tracking-tighter">MYDO Catarman</span>
-            <div className="flex items-center gap-2">
-               <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">{userProfile?.role}</span>
-               <div className={`w-1.5 h-1.5 rounded-full ${userProfile?.status === 'APPROVED' ? 'bg-green-500 shadow-green-200' : 'bg-amber-500 shadow-amber-200'} shadow-sm`} />
-               <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{userProfile?.status}</span>
-            </div>
-          </div>
+          <span className="text-xl font-bold text-[#0D2440] dark:text-white">MYDO SYSTEM</span>
         </div>
+
         <div className="flex justify-center flex-1">
-          <img src={mydoLogo} alt="Logo" className="w-16 h-16 rounded-full border-2 border-white shadow-lg object-cover" />
+          <img src={mydoLogo} alt="Logo" className="w-16 h-16 rounded-full shadow-lg object-cover" />
         </div>
-        <div className="flex items-center justify-end gap-4 flex-1">
-          <div className="relative w-72">
+
+        <div className="flex items-center justify-end gap-4 flex-1 relative">
+          <div className="relative w-72 group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7BA4D0]" />
-            <input type="text" placeholder="Search records..." className="w-full pl-10 pr-4 py-2 bg-[#e7f0fa] border border-[#d1e3f8] rounded-xl outline-none text-sm transition-all focus:bg-white" />
+            <input
+              type="text"
+              placeholder="Search..."
+              style={{ backgroundColor: isDarkMode ? '#1e293b' : '#e7f0fa' }} // Adjust search bar color
+              className="w-full pl-10 pr-4 py-2 border border-[#d1e3f8] dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-800 transition-all outline-none text-sm text-[#0D2440] dark:text-white"
+            />
           </div>
-          <button onClick={() => supabase.auth.signOut()} className="w-10 h-10 bg-[#0D2440] hover:bg-red-500 text-white rounded-full flex items-center justify-center shadow-md transition-all">
-            <LogOut className="w-4 h-4" />
-          </button>
+
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setIsNotifOpen(!isNotifOpen);
+                setIsProfileOpen(false);
+              }}
+              className={`p-2.5 rounded-full transition-all relative ${isNotifOpen ? 'bg-blue-100 text-[#0D2440]' : 'text-[#2E5E99] dark:text-blue-300 hover:text-[#0D2440] hover:bg-gray-100 dark:hover:bg-slate-800'}`}
+            >
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+            </button>
+            <NotificationModal isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
+          </div>
+
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setIsProfileOpen(!isProfileOpen);
+                setIsNotifOpen(false);
+              }}
+              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all ${isProfileOpen ? 'bg-[#2E5E99] text-white ring-4 ring-[#2E5E99]/20' : 'bg-[#0D2440] text-white hover:bg-[#1a3b5e]'}`}
+            >
+              <User className="w-5 h-5" />
+            </button>
+            
+            <SettingsModal 
+              isOpen={isProfileOpen} 
+              onClose={() => setIsProfileOpen(false)} 
+              onOpenSettings={handleOpenSettings} 
+            />
+          </div>
+
+          {/* 5. PASSED DARK MODE STATE TO YOUR SETTINGS MODAL */}
+          <UserSettingsModal 
+            isOpen={isUserSettingsOpen} 
+            onClose={() => setIsUserSettingsOpen(false)} 
+            initialTab={userSettingsTab} 
+            isDarkMode={isDarkMode}
+            setIsDarkMode={setIsDarkMode}
+          />
+
         </div>
       </header>
 
+      {/* CONTENT WRAPPER */}
       <div className="flex flex-1 overflow-hidden">
-        <nav className={`pl-10 pr-4 py-2 space-y-2 transition-all duration-300 shrink-0 ${isSidebarShrinked ? 'w-24' : 'w-72'}`}>
-          <button onClick={() => setActiveMenu('dashboard')} className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${activeMenu === 'dashboard' ? 'bg-[#0D2440] text-white shadow-lg' : 'text-[#7BA4D0] hover:bg-[#e7f0fa]'}`}>
-            <Home size={20} className="shrink-0" /> {!isSidebarShrinked && <span className="font-semibold text-sm">Dashboard</span>}
+        
+        {/* SIDEBAR */}
+        <nav className={`pl-10 pr-4 py-2 space-y-2 transition-all duration-300 shrink-0 overflow-y-auto ${isSidebarShrinked ? 'w-24' : 'w-72'}`}>
+          <button 
+            onClick={() => setActiveMenu('dashboard')}
+            className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${
+              activeMenu === 'dashboard' ? 'bg-[#0D2440] dark:bg-blue-600 text-white shadow-lg' : 'text-[#7BA4D0] dark:text-gray-400 hover:bg-[#e7f0fa] dark:hover:bg-slate-800'
+            }`}>
+            <Home className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarShrinked && <span className="font-semibold text-sm">Dashboard</span>}
           </button>
-          <button onClick={() => setActiveMenu('youth')} className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${activeMenu === 'youth' ? 'bg-[#0D2440] text-white shadow-lg' : 'text-[#7BA4D0] hover:bg-[#e7f0fa]'}`}>
-            <Users size={20} className="shrink-0" /> {!isSidebarShrinked && <span className="font-semibold text-sm">SK Profiles</span>}
+          
+          <button 
+            onClick={() => setActiveMenu('youth')}
+            className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${
+              activeMenu === 'youth' ? 'bg-[#0D2440] dark:bg-blue-600 text-white shadow-lg' : 'text-[#7BA4D0] dark:text-gray-400 hover:bg-[#e7f0fa] dark:hover:bg-slate-800'
+            }`}>
+            <Users className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarShrinked && <span className="font-semibold text-sm">SK Profiles</span>}
           </button>
-          <button onClick={() => setActiveMenu('map')} className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${activeMenu === 'map' ? 'bg-[#0D2440] text-white shadow-lg' : 'text-[#7BA4D0] hover:bg-[#e7f0fa]'}`}>
-            <Map size={20} className="shrink-0" /> {!isSidebarShrinked && <span className="font-semibold text-sm">Barangay Map</span>}
+          
+          <button 
+            onClick={() => setActiveMenu('map')}
+            className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${
+              activeMenu === 'map' ? 'bg-[#0D2440] dark:bg-blue-600 text-white shadow-lg' : 'text-[#7BA4D0] dark:text-gray-400 hover:bg-[#e7f0fa] dark:hover:bg-slate-800'
+            }`}>
+            <Map className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarShrinked && <span className="font-semibold text-sm">Brgy Map</span>}
+          </button>
+          
+          <button 
+            onClick={() => setActiveMenu('reports')}
+            className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${
+              activeMenu === 'reports' ? 'bg-[#0D2440] dark:bg-blue-600 text-white shadow-lg' : 'text-[#7BA4D0] dark:text-gray-400 hover:bg-[#e7f0fa] dark:hover:bg-slate-800'
+            }`}>
+            <FileText className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarShrinked && <span className="font-semibold text-sm">Reports</span>}
           </button>
         </nav>
-        <main className="flex-1 pr-10 pb-10 overflow-y-auto">
-          {activeMenu === 'dashboard' && <DashboardView userProfile={userProfile} />}
+
+        {/* MAIN AREA */}
+        <main className={`flex-1 h-full pr-10 pb-10 pl-2 transition-all ${
+          (activeMenu === 'map' || activeMenu === 'reports') ? 'overflow-hidden' : 'overflow-y-auto'
+        }`}>
+          {activeMenu === 'dashboard' && <DashboardView />}
           {activeMenu === 'youth' && <ProfilesView />}
-          {activeMenu === 'map' && <MapView />}
+          
+          <div className="h-full">
+            {activeMenu === 'map' && <MapView />}
+            {activeMenu === 'reports' && <ReportsView />}
+          </div>
         </main>
+
       </div>
     </div>
   );

@@ -1,401 +1,389 @@
-// import React, { useEffect, useState } from 'react';
-// import { supabase } from '../supabaseClient';
-// import { Edit, Trash2, User, Search, MapPin, Loader2, RefreshCw, CheckCircle, XCircle, Eye } from 'lucide-react';
-// import AddProfileModal from './AddProfileModal';
-
-// const ProfilesView = () => {
-//   const [profiles, setProfiles] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [isModalOpen, setIsModalOpen] = useState(false);
-//   const [selectedProfile, setSelectedProfile] = useState(null);
-//   const [modalMode, setModalMode] = useState('add');
-
-//   // FETCH FUNCTION
-//   const fetchProfiles = async () => {
-//     try {
-//       setLoading(true);
-//       const { data, error } = await supabase
-//         .from('youths')
-//         .select(`
-//           *,
-//           barangays (name)
-//         `)
-//         .eq('role', 'SK') 
-//         .order('created_at', { ascending: false });
-
-//       if (error) throw error;
-//       setProfiles(data || []);
-//     } catch (error) {
-//       alert('Error fetching data: ' + error.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchProfiles();
-//   }, []);
-
-//   // UPDATE STATUS (Approve)
-//   const handleStatusUpdate = async (profileId, newStatus) => {
-//     try {
-//       const { error } = await supabase
-//         .from('youths')
-//         .update({ status: newStatus })
-//         .eq('id', profileId);
-
-//       if (error) throw error;
-      
-//       setProfiles(prev => prev.map(p => 
-//         p.id === profileId ? { ...p, status: newStatus } : p
-//       ));
-//     } catch (error) {
-//       alert('Failed to update status: ' + error.message);
-//     }
-//   };
-
-//   // DELETE LOGIC (Now accessible for all accounts)
-//   const handleDelete = async (profileId) => {
-//     if (!window.confirm("Are you sure you want to permanently delete this account? This action cannot be undone.")) return;
-
-//     try {
-//       const { error } = await supabase
-//         .from('youths')
-//         .delete()
-//         .eq('id', profileId);
-
-//       if (error) throw error;
-      
-//       // Remove from local state immediately
-//       setProfiles(prev => prev.filter(p => p.id !== profileId));
-//     } catch (error) {
-//       alert('Error deleting user: ' + error.message);
-//     }
-//   };
-
-//   const handleEdit = (profile) => {
-//     setSelectedProfile(profile);
-//     setModalMode('edit');
-//     setIsModalOpen(true);
-//   };
-
-//   const handleView = (profile) => {
-//     setSelectedProfile(profile);
-//     setModalMode('view');
-//     setIsModalOpen(true);
-//   };
-
-//   const filteredProfiles = profiles.filter(p => 
-//     `${p.first_name} ${p.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//     p.skmt_no?.toLowerCase().includes(searchTerm.toLowerCase())
-//   );
-
-//   return (
-//     <div className="p-8 bg-gray-50 min-h-screen">
-//       {/* HEADER */}
-//       <div className="flex justify-between items-center mb-8">
-//         <div>
-//           <h1 className="text-2xl font-black text-[#0D2440] uppercase tracking-tighter">SK Member Registry</h1>
-//           <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Manage and Delete Accounts</p>
-//         </div>
-        
-//         <div className="flex gap-4">
-//           <button onClick={fetchProfiles} className="p-3 bg-white rounded-xl shadow-sm text-gray-400 hover:text-indigo-600 transition-all">
-//             <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-//           </button>
-          
-//           <div className="relative">
-//             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-//             <input 
-//               type="text"
-//               placeholder="Search SK Members..."
-//               className="pl-10 pr-4 py-2 bg-white border-none rounded-xl text-sm font-bold shadow-sm focus:ring-2 focus:ring-indigo-500/20 outline-none w-64"
-//               value={searchTerm}
-//               onChange={(e) => setSearchTerm(e.target.value)}
-//             />
-//           </div>
-//           <button 
-//             onClick={() => { setSelectedProfile(null); setModalMode('add'); setIsModalOpen(true); }}
-//             className="bg-[#0D2440] text-white px-6 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-100"
-//           >
-//             Add New SK
-//           </button>
-//         </div>
-//       </div>
-
-//       {/* TABLE */}
-//       <div className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-gray-100">
-//         <div className="overflow-x-auto">
-//           <table className="w-full text-left border-collapse">
-//             <thead>
-//               <tr className="bg-gray-50/50 border-b border-gray-100">
-//                 <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Profile</th>
-//                 <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Full Name</th>
-//                 <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Barangay</th>
-//                 <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-//                 <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
-//               </tr>
-//             </thead>
-//             <tbody className="divide-y divide-gray-50">
-//               {loading ? (
-//                 <tr>
-//                   <td colSpan="5" className="p-20 text-center text-gray-400 font-bold uppercase text-xs tracking-widest">
-//                     <Loader2 className="animate-spin mx-auto mb-2" size={32} /> Syncing Database...
-//                   </td>
-//                 </tr>
-//               ) : filteredProfiles.length === 0 ? (
-//                 <tr>
-//                   <td colSpan="5" className="p-20 text-center font-black text-gray-300 uppercase tracking-widest">No Records Found</td>
-//                 </tr>
-//               ) : (
-//                 filteredProfiles.map((profile) => (
-//                   <tr key={profile.id} className="hover:bg-indigo-50/30 transition-colors group">
-//                     <td className="p-6">
-//                       <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-100 border-2 border-white shadow-md">
-//                         {profile.image_url ? (
-//                           <img src={profile.image_url} className="w-full h-full object-cover" alt="" />
-//                         ) : (
-//                           <div className="w-full h-full flex items-center justify-center text-gray-300"><User size={20} /></div>
-//                         )}
-//                       </div>
-//                     </td>
-//                     <td className="p-6">
-//                       <p className="text-sm font-black text-[#0D2440] uppercase tracking-tighter">
-//                         {profile.last_name}, {profile.first_name}
-//                       </p>
-//                       <p className="text-[10px] text-gray-400 font-bold uppercase">{profile.skmt_no || 'No SKMT'}</p>
-//                     </td>
-//                     <td className="p-6 text-xs font-bold text-gray-600 uppercase">
-//                       {profile.barangays?.name || 'Unassigned'}
-//                     </td>
-//                     <td className="p-6">
-//                       <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
-//                         profile.status === 'Active' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'
-//                       }`}>
-//                         {profile.status || 'PENDING'}
-//                       </span>
-//                     </td>
-//                     <td className="p-6">
-//                       <div className="flex justify-end gap-2 items-center">
-//                         {/* PENDING SPECIFIC ACTIONS */}
-//                         {profile.status === 'PENDING' && (
-//                           <button 
-//                             onClick={() => handleStatusUpdate(profile.id, 'Active')}
-//                             className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all shadow-sm"
-//                             title="Approve"
-//                           >
-//                             <CheckCircle size={16} />
-//                           </button>
-//                         )}
-                        
-//                         {/* GENERAL ACTIONS */}
-//                         <div className="flex gap-2">
-//                           <button onClick={() => handleView(profile)} className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-white shadow-sm" title="View"><Eye size={14} /></button>
-//                           <button onClick={() => handleEdit(profile)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all" title="Edit"><Edit size={14} /></button>
-//                           <button 
-//                             onClick={() => handleDelete(profile.id)} 
-//                             className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"
-//                             title="Delete Permanently"
-//                           >
-//                             <Trash2 size={14} />
-//                           </button>
-//                         </div>
-//                       </div>
-//                     </td>
-//                   </tr>
-//                 ))
-//               )}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-
-//       <AddProfileModal 
-//         isOpen={isModalOpen} 
-//         onClose={() => { setIsModalOpen(false); fetchProfiles(); }} 
-//         mode={modalMode} 
-//         initialData={selectedProfile} 
-//       />
-//     </div>
-//   );
-// };
-
-// export default ProfilesView;
-
-import React, { useEffect, useState } from 'react';
-import { supabase } from '../supabaseClient';
-import { Edit, Trash2, User, Search, MapPin, Loader2, RefreshCw, CheckCircle, Eye } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Search, UserPlus, Filter, Edit2, Eye, 
+  Calendar, MoreHorizontal, ChevronLeft, MapPin, Users 
+} from 'lucide-react';
 import AddProfileModal from './AddProfileModal';
 
 const ProfilesView = () => {
-  const [profiles, setProfiles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // --- NAVIGATION STATE ---
+  const [currentView, setCurrentView] = useState('barangays');
+  const [selectedBarangay, setSelectedBarangay] = useState(null);
+
+  // --- UI STATE ---
   const [searchTerm, setSearchTerm] = useState('');
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRef = useRef(null);
+
+  // --- MODAL STATE ---
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState(null);
   const [modalMode, setModalMode] = useState('add');
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
-  const fetchProfiles = async () => {
-    try {
-      setLoading(true);
-      // We remove .order() entirely to prevent "column does not exist" errors
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          barangays (name)
-        `)
-        .eq('role', 'SK');
+  // --- FILTER STATE ---
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const filterRef = useRef(null);
+  
+  // Barangay Filters
+  const [brgyCategoryFilter, setBrgyCategoryFilter] = useState('All');
+  const [brgyStatusFilter, setBrgyStatusFilter] = useState('All');
+  
+  // Profile Filters
+  const [profileStatusFilter, setProfileStatusFilter] = useState('All');
+  const [profileGenderFilter, setProfileGenderFilter] = useState('All');
 
-      if (error) throw error;
-      setProfiles(data || []);
-    } catch (error) {
-      console.error('Fetch Error:', error);
-      alert('Database Sync Error: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Close dropdown menus when clicking outside
   useEffect(() => {
-    fetchProfiles();
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) setOpenMenuId(null);
+      if (filterRef.current && !filterRef.current.contains(event.target)) setIsFilterMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleStatusUpdate = async (profileId, newStatus) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status: newStatus })
-        .eq('id', profileId);
+  // --- MOCK DATA: BARANGAYS ---
+  const barangays = [
+    { id: 1, name: 'Old Rizal', category: 'Rural', chairman: 'Hon. Maria Clara', totalYouth: 145, status: 'Active' },
+    { id: 2, name: 'Dalakit', category: 'Poblacion', chairman: 'Hon. Jose Rizal', totalYouth: 312, status: 'Active' },
+    { id: 3, name: 'UEP Zone 1', category: 'University', chairman: 'Hon. Apolinario Mabini', totalYouth: 250, status: 'Active' },
+    { id: 4, name: 'Baybay', category: 'Coastal', chairman: 'Hon. Andres Bonifacio', totalYouth: 198, status: 'Inactive' },
+  ];
 
-      if (error) throw error;
-      setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, status: newStatus } : p));
-    } catch (error) {
-      alert('Update failed: ' + error.message);
-    }
-  };
+  // --- MOCK DATA: PROFILES ---
+  const [profiles, setProfiles] = useState([
+    { id: 1, barangay: 'Old Rizal', skmtNo: '2026-001', firstName: 'Juan', lastName: 'dela Cruz', position: 'SK Chairperson', birthdate: '2004-05-12', age: 22, gender: 'Male', status: 'Active' },
+    { id: 2, barangay: 'Old Rizal', skmtNo: '2026-002', firstName: 'Ana', lastName: 'Reyes', position: 'Secretary', birthdate: '2005-08-21', age: 20, gender: 'Female', status: 'Active' },
+    { id: 3, barangay: 'Dalakit', skmtNo: '2026-003', firstName: 'Maria', lastName: 'Garcia', position: 'SK Chairperson', birthdate: '2007-02-20', age: 19, gender: 'Female', status: 'Active' },
+    { id: 4, barangay: 'UEP Zone 1', skmtNo: '2026-004', firstName: 'Pedro', lastName: 'Santos', position: 'Treasurer', birthdate: '2001-11-30', age: 25, gender: 'Male', status: 'Inactive' },
+    { id: 5, barangay: 'Old Rizal', skmtNo: '2026-005', firstName: 'Jose', lastName: 'Batumbakal', position: 'Kagawad', birthdate: '2003-01-15', age: 23, gender: 'Male', status: 'Resigned' },
+  ]);
 
-  const handleDelete = async (profileId) => {
-    if (!window.confirm("Are you sure? This is permanent.")) return;
-    try {
-      const { error } = await supabase.from('profiles').delete().eq('id', profileId);
-      if (error) throw error;
-      setProfiles(prev => prev.filter(p => p.id !== profileId));
-    } catch (error) {
-      alert('Delete failed: ' + error.message);
-    }
-  };
-
-  // Safe filtering logic
-  const filteredProfiles = profiles.filter(p => {
-    const search = searchTerm.toLowerCase();
-    const fName = (p.first_name || '').toLowerCase();
-    const lName = (p.last_name || '').toLowerCase();
-    const brgy = (p.barangays?.name || '').toLowerCase();
-    return fName.includes(search) || lName.includes(search) || brgy.includes(search);
+  // --- FILTERING LOGIC ---
+  const filteredBarangays = barangays.filter(b => {
+    const matchesSearch = b.name.toLowerCase().includes(searchTerm.toLowerCase()) || b.chairman.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = brgyCategoryFilter === 'All' || b.category === brgyCategoryFilter;
+    const matchesStatus = brgyStatusFilter === 'All' || b.status === brgyStatusFilter;
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
+  const filteredProfiles = profiles.filter(p => {
+    const inBarangay = p.barangay === selectedBarangay?.name;
+    const matchesSearch = (`${p.firstName} ${p.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) || p.skmtNo.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = profileStatusFilter === 'All' || p.status === profileStatusFilter;
+    const matchesGender = profileGenderFilter === 'All' || p.gender === profileGenderFilter;
+    return inBarangay && matchesSearch && matchesStatus && matchesGender;
+  });
+
+  // --- HANDLERS ---
+  const handleViewBarangay = (barangay) => {
+    setSelectedBarangay(barangay);
+    setCurrentView('profiles');
+    setSearchTerm('');
+    setProfileStatusFilter('All');
+    setProfileGenderFilter('All');
+    setIsFilterMenuOpen(false);
+  };
+
+  const handleBackToBarangays = () => {
+    setCurrentView('barangays');
+    setSelectedBarangay(null);
+    setSearchTerm('');
+    setBrgyCategoryFilter('All');
+    setBrgyStatusFilter('All');
+    setIsFilterMenuOpen(false);
+  };
+
+  const handleAction = (mode, profile = null) => {
+    setModalMode(mode);
+    setSelectedProfile(profile);
+    setIsModalOpen(true);
+    setOpenMenuId(null);
+  };
+
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-8">
+    // MAIN CONTAINER (Added dark mode classes)
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-8 h-full shadow-sm flex flex-col transition-colors duration-300">
+      
+      {/* --- HEADER --- */}
+      <div className="flex justify-between items-start mb-8 shrink-0">
         <div>
-          <h1 className="text-2xl font-black text-[#0D2440] uppercase tracking-tighter">SK Member Registry</h1>
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Profiles Table View</p>
+          {currentView === 'barangays' ? (
+            <>
+              <h1 className="text-2xl font-black text-[#0D2440] dark:text-white transition-colors">Barangay Directory</h1>
+              <p className="text-sm text-[#7BA4D0] dark:text-slate-400 transition-colors">Select a barangay to view its SK Profiles</p>
+            </>
+          ) : (
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={handleBackToBarangays}
+                className="p-2 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 hover:text-[#0D2440] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl transition-all"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <div>
+                <h1 className="text-2xl font-black text-[#0D2440] dark:text-white transition-colors">Brgy. {selectedBarangay?.name}</h1>
+                <p className="text-sm text-[#7BA4D0] dark:text-slate-400 uppercase tracking-widest font-bold text-[10px] transition-colors">Youth Registry</p>
+              </div>
+            </div>
+          )}
         </div>
-        
-        <div className="flex gap-4">
-          <button onClick={fetchProfiles} className="p-3 bg-white rounded-xl shadow-sm hover:text-indigo-600 transition-all">
-            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-          </button>
+
+        {/* --- DYNAMIC ACTIONS & FILTER BUTTON --- */}
+        <div className="flex gap-3">
           
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search SK..."
-              className="pl-10 pr-4 py-2 bg-white border-none rounded-xl text-sm font-bold shadow-sm outline-none w-64"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="relative" ref={filterRef}>
+            <button 
+              onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-100 dark:border-slate-700 rounded-xl text-[#7BA4D0] dark:text-slate-300 font-bold text-sm hover:bg-gray-50 dark:hover:bg-slate-800 transition-all"
+            >
+              <Filter size={18} /> Filter
+            </button>
+
+            {/* FILTER DROPDOWN MENU */}
+            {isFilterMenuOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 z-50 p-5 animate-in fade-in slide-in-from-top-2 duration-200">
+                
+                {currentView === 'barangays' ? (
+                  // BARANGAY FILTERS
+                  <>
+                    <div className="mb-4">
+                      <label className="text-[10px] font-black text-gray-400 dark:text-slate-400 uppercase tracking-widest mb-2 block">District Category</label>
+                      <select 
+                        value={brgyCategoryFilter}
+                        onChange={(e) => setBrgyCategoryFilter(e.target.value)}
+                        className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors"
+                      >
+                        <option value="All">All Categories</option>
+                        <option value="Rural">Rural</option>
+                        <option value="Poblacion">Poblacion</option>
+                        <option value="University">University</option>
+                        <option value="Coastal">Coastal</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 dark:text-slate-400 uppercase tracking-widest mb-2 block">Status</label>
+                      <select 
+                        value={brgyStatusFilter}
+                        onChange={(e) => setBrgyStatusFilter(e.target.value)}
+                        className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors"
+                      >
+                        <option value="All">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  // PROFILE FILTERS
+                  <>
+                    <div className="mb-4">
+                      <label className="text-[10px] font-black text-gray-400 dark:text-slate-400 uppercase tracking-widest mb-2 block">Account Status</label>
+                      <select 
+                        value={profileStatusFilter}
+                        onChange={(e) => setProfileStatusFilter(e.target.value)}
+                        className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors"
+                      >
+                        <option value="All">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Resigned">Resigned</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 dark:text-slate-400 uppercase tracking-widest mb-2 block">Gender</label>
+                      <select 
+                        value={profileGenderFilter}
+                        onChange={(e) => setProfileGenderFilter(e.target.value)}
+                        className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors"
+                      >
+                        <option value="All">All Genders</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+                
+              </div>
+            )}
           </div>
-          <button 
-            onClick={() => { setSelectedProfile(null); setModalMode('add'); setIsModalOpen(true); }}
-            className="bg-[#0D2440] text-white px-6 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg"
-          >
-            Add New SK
-          </button>
+
+          {/* Only show Add Profile if we are inside a Barangay view */}
+          {currentView === 'profiles' && (
+            <button 
+              onClick={() => handleAction('add')}
+              className="flex items-center gap-2 px-6 py-2.5 bg-[#0D2440] dark:bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-[#0D2440]/20 dark:shadow-none hover:bg-[#1a3b5e] dark:hover:bg-blue-700 transition-all"
+            >
+              <UserPlus size={18} /> Add Profile
+            </button>
+          )}
         </div>
       </div>
 
-      {/* TABLE */}
-      <div className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-gray-100">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Official</th>
-                <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Assigned Barangay</th>
-                <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+      {/* --- SEARCH BAR --- */}
+      <div className="relative mb-6 shrink-0 animate-in fade-in duration-300">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7BA4D0] dark:text-slate-400" size={20} />
+        <input 
+          type="text" 
+          placeholder={currentView === 'barangays' ? "Search barangay or chairman..." : "Search by SKMT No. or Name..."}
+          className="w-full pl-12 pr-4 py-3.5 bg-[#F8FAFC] dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-[#0D2440] dark:text-white font-medium placeholder-[#7BA4D0]/60 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {/* --- DYNAMIC TABLE AREA --- */}
+      <div className="flex-1 overflow-auto pr-2">
+        
+        {/* VIEW 1: BARANGAY LIST */}
+        {currentView === 'barangays' && (
+          <table className="w-full text-left animate-in slide-in-from-right-4 duration-300">
+            <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10 transition-colors">
+              <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-[#7BA4D0] dark:text-slate-400 border-b border-gray-100 dark:border-slate-800">
+                <th className="pb-4 px-4">Barangay</th>
+                <th className="pb-4 px-4">SK Chairman</th>
+                <th className="pb-4 px-4 text-center">Total Youth</th>
+                <th className="pb-4 px-4">Status</th>
+                <th className="pb-4 px-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
-              {loading ? (
-                <tr><td colSpan="4" className="p-20 text-center text-gray-400 font-bold uppercase text-xs">Loading...</td></tr>
-              ) : filteredProfiles.length === 0 ? (
-                <tr><td colSpan="4" className="p-20 text-center text-gray-300 font-black uppercase">No Records</td></tr>
-              ) : (
-                filteredProfiles.map((profile) => (
-                  <tr key={profile.id} className="hover:bg-indigo-50/30 transition-colors">
-                    <td className="p-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 border border-white shadow-sm">
-                          {profile.image_url ? <img src={profile.image_url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300"><User size={16} /></div>}
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-[#0D2440] uppercase tracking-tighter">
-                            {profile.first_name || profile.last_name ? `${profile.first_name} ${profile.last_name}` : 'Unknown Name'}
-                          </p>
-                          <p className="text-[10px] text-indigo-500 font-bold uppercase">{profile.position || 'SK Official'}</p>
-                        </div>
+            <tbody className="divide-y divide-gray-50 dark:divide-slate-800/50">
+              {filteredBarangays.map((brgy) => (
+                <tr key={brgy.id} className="group hover:bg-[#F8FAFC] dark:hover:bg-slate-800/50 transition-all cursor-pointer" onClick={() => handleViewBarangay(brgy)}>
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors">
+                        <MapPin size={18} />
                       </div>
-                    </td>
-                    <td className="p-6">
-                      <div className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase">
-                        <MapPin size={12} className="text-amber-500" />
-                        {profile.barangays?.name || 'No Barangay Set'}
+                      <div>
+                        <p className="text-sm font-black text-[#0D2440] dark:text-white transition-colors">{brgy.name}</p>
+                        <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">{brgy.category}</p>
                       </div>
-                    </td>
-                    <td className="p-6">
-                      <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${profile.status === 'APPROVED' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
-                        {profile.status || 'PENDING'}
-                      </span>
-                    </td>
-                    <td className="p-6 text-right">
-                      <div className="flex justify-end gap-2 items-center">
-                        {profile.status === 'PENDING' && (
-                          <button onClick={() => handleStatusUpdate(profile.id, 'APPROVED')} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all"><CheckCircle size={16} /></button>
-                        )}
-                        <button onClick={() => { setSelectedProfile(profile); setModalMode('view'); setIsModalOpen(true); }} className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-white shadow-sm"><Eye size={14} /></button>
-                        <button onClick={() => { setSelectedProfile(profile); setModalMode('edit'); setIsModalOpen(true); }} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all"><Edit size={14} /></button>
-                        <button onClick={() => handleDelete(profile.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-sm font-bold text-gray-700 dark:text-slate-300 transition-colors">{brgy.chairman}</td>
+                  <td className="py-4 px-4">
+                    <div className="flex items-center justify-center gap-1.5 text-sm font-black text-[#0D2440] dark:text-white bg-gray-50 dark:bg-slate-800 py-1 px-3 rounded-lg w-fit mx-auto group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors">
+                      <Users size={14} className="text-blue-500 dark:text-blue-400" />
+                      {brgy.totalYouth}
+                    </div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                        brgy.status === 'Active' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/50' : 'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700'
+                      }`}>
+                      {brgy.status}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 text-right">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleViewBarangay(brgy); }}
+                      className="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-[#0D2440] dark:text-white text-xs font-bold rounded-xl group-hover:border-blue-200 dark:group-hover:border-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-all"
+                    >
+                      View Profiles
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {filteredBarangays.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="py-12 text-center text-sm font-bold text-gray-400 dark:text-slate-500">
+                    No barangays match your filter criteria.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
-        </div>
+        )}
+
+        {/* VIEW 2: PROFILES LIST */}
+        {currentView === 'profiles' && (
+          <table className="w-full text-left animate-in slide-in-from-right-8 duration-300">
+            <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10 transition-colors">
+              <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-[#7BA4D0] dark:text-slate-400 border-b border-gray-100 dark:border-slate-800">
+                <th className="pb-4 px-4">SKMT No.</th>
+                <th className="pb-4 px-4">Name</th>
+                <th className="pb-4 px-4">Position</th>
+                <th className="pb-4 px-4">Birthdate</th>
+                <th className="pb-4 px-4 text-center">Age</th>
+                <th className="pb-4 px-4">Gender</th>
+                <th className="pb-4 px-4">Status</th>
+                <th className="pb-4 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50 dark:divide-slate-800/50">
+              {filteredProfiles.length > 0 ? (
+                filteredProfiles.map((profile) => (
+                  <tr key={profile.id} className="group hover:bg-[#F8FAFC] dark:hover:bg-slate-800/50 transition-all">
+                    <td className="py-5 px-4 text-sm font-bold text-[#7BA4D0] dark:text-blue-400">{profile.skmtNo}</td>
+                    <td className="py-5 px-4 text-sm font-black text-[#0D2440] dark:text-white">{profile.firstName} {profile.lastName}</td>
+                    <td className="py-5 px-4 text-xs font-bold text-gray-600 dark:text-slate-300 uppercase tracking-wide">{profile.position}</td>
+                    <td className="py-5 px-4 text-sm text-[#7BA4D0] dark:text-slate-400 font-medium">
+                      <div className="flex items-center gap-2"><Calendar size={14} className="opacity-40" /> {profile.birthdate}</div>
+                    </td>
+                    <td className="py-5 px-4 text-sm font-black text-[#0D2440] dark:text-white text-center">{profile.age}</td>
+                    <td className="py-5 px-4 text-sm text-[#7BA4D0] dark:text-slate-400 font-medium">{profile.gender}</td>
+                    <td className="py-5 px-4 text-sm">
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                        profile.status === 'Active' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/50' :
+                        profile.status === 'Resigned' ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800/50' : 
+                        'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700'
+                      }`}>
+                        {profile.status}
+                      </span>
+                    </td>
+                    <td className="py-5 px-4 text-right relative">
+                      <button 
+                        onClick={() => setOpenMenuId(openMenuId === profile.id ? null : profile.id)}
+                        className="p-2 text-[#7BA4D0] dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-[#0D2440] dark:hover:text-white rounded-lg transition-all"
+                      >
+                        <MoreHorizontal size={20} />
+                      </button>
+
+                      {/* Universal Action Dropdown */}
+                      {openMenuId === profile.id && (
+                        <div ref={menuRef} className="absolute right-4 mt-2 w-36 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700 z-50 py-2 animate-in fade-in zoom-in duration-200">
+                          <button 
+                            onClick={() => handleAction('view', profile)}
+                            className="w-full px-4 py-2.5 text-left text-[11px] font-black uppercase tracking-widest text-[#7BA4D0] dark:text-slate-400 hover:bg-[#F8FAFC] dark:hover:bg-slate-700 hover:text-[#0D2440] dark:hover:text-white flex items-center gap-2 transition-colors"
+                          >
+                            <Eye size={14} /> View
+                          </button>
+                          <button 
+                            onClick={() => handleAction('edit', profile)}
+                            className="w-full px-4 py-2.5 text-left text-[11px] font-black uppercase tracking-widest text-[#7BA4D0] dark:text-slate-400 hover:bg-[#F8FAFC] dark:hover:bg-slate-700 hover:text-[#0D2440] dark:hover:text-white flex items-center gap-2 transition-colors"
+                          >
+                            <Edit2 size={14} /> Edit
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="py-12 text-center text-sm font-bold text-gray-400 dark:text-slate-500">
+                    No youth profiles match your search or filter.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+
       </div>
 
+      {/* --- Add/Edit Profile Modal --- */}
       <AddProfileModal 
         isOpen={isModalOpen} 
-        onClose={() => { setIsModalOpen(false); fetchProfiles(); }} 
-        mode={modalMode} 
-        initialData={selectedProfile} 
+        onClose={() => setIsModalOpen(false)} 
+        mode={modalMode}
+        initialData={selectedProfile}
+        onSave={(data) => {
+          console.log("Saving profile:", data);
+          setIsModalOpen(false);
+        }}
       />
     </div>
   );
