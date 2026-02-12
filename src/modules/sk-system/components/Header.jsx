@@ -112,7 +112,7 @@ export default function Header({
   };
 
   return (
-    <div className="bg-white dark:bg-[#1e293b] shadow-md border-b border-[#E7F0FA] dark:border-gray-700 px-6 py-3 z-20 flex-shrink-0 relative print:hidden transition-colors duration-300">
+    <div className="bg-white dark:bg-[#1e293b] shadow-md border-b border-[#E7F0FA] dark:border-gray-700 px-6 py-3 z-20 shrink-0 relative print:hidden transition-colors duration-300">
       {/* Overlay */}
       {(isProfileOpen || isNotifOpen) && (
         <div
@@ -249,7 +249,7 @@ export default function Header({
                         }`}
                       >
                         <div className="flex gap-3">
-                          <div className="mt-1 flex-shrink-0">
+                          <div className="mt-1 shrink-0">
                             {getIcon(n.type)}
                           </div>
                           <div className="flex-1">
@@ -310,7 +310,7 @@ export default function Header({
                   SK Secretary
                 </div>
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-[#2E5E99] to-[#0D2440] dark:from-blue-600 dark:to-blue-900 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+              <div className="w-10 h-10 bg-linear-to-br from-[#2E5E99] to-[#0D2440] dark:from-blue-600 dark:to-blue-900 rounded-full flex items-center justify-center text-white font-bold shadow-md">
                 SK
               </div>
               <ChevronDown

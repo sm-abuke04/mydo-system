@@ -177,7 +177,7 @@ export default function SKOfficials() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2E5E99] to-[#0D2440] flex items-center justify-center text-white font-bold text-lg">
+                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#2E5E99] to-[#0D2440] flex items-center justify-center text-white font-bold text-lg">
                     {official.firstName[0]}
                     {official.lastName[0]}
                   </div>

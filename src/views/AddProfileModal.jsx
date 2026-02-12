@@ -175,12 +175,12 @@ const AddProfileModal = ({ isOpen, onClose, mode, initialData, onSave }) => {
   // MAIN RENDER
   // =========================================================
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-[#0D2440]/30 dark:bg-slate-900/80 backdrop-blur-sm transition-colors" onClick={onClose} />
       
       {/* Modal Content */}
-      <div className="relative bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2rem] shadow-2xl border border-gray-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in duration-200 transition-colors">
+      <div className="relative bg-white dark:bg-slate-900 w-full max-w-2xl rounded-4xl shadow-2xl border border-gray-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in duration-200 transition-colors">
         
         {/* Header */}
         <div className="px-8 py-5 flex justify-between items-center border-b border-gray-50 dark:border-slate-800 transition-colors">
@@ -220,7 +220,7 @@ const AddProfileModal = ({ isOpen, onClose, mode, initialData, onSave }) => {
 
               <div 
                 onClick={triggerFileInput}
-                className={`w-32 h-32 rounded-[2rem] overflow-hidden border-4 border-white dark:border-slate-800 shadow-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center group relative transition-colors ${!isView ? 'cursor-pointer' : ''}`}
+                className={`w-32 h-32 rounded-4xl overflow-hidden border-4 border-white dark:border-slate-800 shadow-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center group relative transition-colors ${!isView ? 'cursor-pointer' : ''}`}
               >
                 {formData.image ? (
                   <img src={formData.image} alt="Profile" className="w-full h-full object-cover" />
@@ -281,7 +281,7 @@ const AddProfileModal = ({ isOpen, onClose, mode, initialData, onSave }) => {
 
           {/* Compliance Board */}
           {!isAdd && (
-            <section className="bg-gray-50/50 dark:bg-slate-800/30 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 transition-colors">
+            <section className="bg-gray-50/50 dark:bg-slate-800/30 p-6 rounded-4xl border border-gray-100 dark:border-slate-800 transition-colors">
               <div className="flex items-center gap-2 mb-4">
                 <Shield size={14} className="text-indigo-500 dark:text-indigo-400 transition-colors" />
                 <h3 className="text-[10px] font-black text-[#0D2440] dark:text-white uppercase tracking-wider transition-colors">Compliance Monitoring Board</h3>

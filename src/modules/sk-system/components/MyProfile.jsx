@@ -39,7 +39,7 @@ export default function MyProfile() {
         {/* Left Column: Avatar Card */}
         <div className="bg-white p-6 rounded-xl shadow-lg border border-[#7BA4D0]/20 flex flex-col items-center text-center h-fit">
           <div className="relative group">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#2E5E99] to-[#0D2440] flex items-center justify-center text-white text-4xl font-bold mb-4 shadow-md">
+            <div className="w-32 h-32 rounded-full bg-linear-to-br from-[#2E5E99] to-[#0D2440] flex items-center justify-center text-white text-4xl font-bold mb-4 shadow-md">
               {adminData.firstName[0]}{adminData.lastName[0]}
             </div>
             <button className="absolute bottom-4 right-0 p-2 bg-white rounded-full shadow-md text-[#2E5E99] hover:text-[#0D2440] transition-colors border border-[#E7F0FA]">

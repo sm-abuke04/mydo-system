@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom'; // Hooks
 import { Save, XCircle } from 'lucide-react';
 import ProfileSection from './ProfileSection';
-import DemographicCards from './DemograhicCards';
-import { INITIAL_FORM_STATE } from '../data/Formconstants'; // Importing initial form state from service for consistency
+import DemographicCards from './DemographicCards';
+import { INITIAL_FORM_STATE } from '../data/Form_Constants'; // Importing initial form state from service for consistency
 
 export default function ProfileForm({ profiles, onSubmit }) {
   const navigate = useNavigate();

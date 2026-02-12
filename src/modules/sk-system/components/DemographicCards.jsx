@@ -6,7 +6,7 @@ import {
   YOUTH_AGE_GROUP_OPTIONS, 
   WORK_STATUS_OPTIONS, 
   EDUCATIONAL_BACKGROUND_OPTIONS 
-} from '../data/Formconstants'; // Updated import path for constants
+} from '../data/Form_Constants'; // Updated import path for constants
 
 export default function DemographicCards({ formData, handleInputChange, handleCheckboxChange }) {
   const cardStyle = "bg-white rounded-xl p-6 border border-[#7BA4D0]/40 shadow-sm hover:shadow-md transition-shadow hover:border-[#2E5E99] h-full flex flex-col";

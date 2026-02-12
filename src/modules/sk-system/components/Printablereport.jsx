@@ -63,7 +63,7 @@ export default function PrintableReport({ profiles }) {
 
       {/* --- ACTION BAR (Screen Only) --- */}
       {/* FIX: Width set to 8.5in to match paper width */}
-      <div className="w-[8.5in] mb-4 flex justify-between items-center print:hidden px-1">
+      <div className="w-204 mb-4 flex justify-between items-center print:hidden px-1">
         <div>
           <h2 className="text-lg font-bold text-gray-800">KK Profile Summary</h2>
           <p className="text-sm text-gray-500">Official Format • Folio (8.5" x 13")</p>
@@ -78,7 +78,7 @@ export default function PrintableReport({ profiles }) {
 
       {/* --- DOCUMENT PAGE (FOLIO SIZE) --- */}
       {/* Width: 8.5in | Height: 13in */}
-      <div className="bg-white w-[8.5in] min-h-[13in] p-[0.5in] shadow-2xl text-black font-serif text-[10pt] leading-snug print:w-full print:shadow-none print:p-0 box-border">
+      <div className="bg-white w-204 min-h-312 p-12 shadow-2xl text-black font-serif text-[10pt] leading-snug print:w-full print:shadow-none print:p-0 box-border">
         
         {/* HEADER */}
         <div className="flex justify-between items-start mb-4">
