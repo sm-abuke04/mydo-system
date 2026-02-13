@@ -16,7 +16,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import SKLogo from "../assets/sk-logo.png"; // Ensure you have this asset in the correct path
+import { useAuth } from "@/context/AuthContext"; // Import Auth Hook
+import SKLogo from "../assets/sk-logo.png";
 
 export default function Header({
   view,
@@ -29,6 +30,7 @@ export default function Header({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const navigate = useNavigate();
+  const { logout, user } = useAuth(); // Get logout function and user data
 
   // Mock Notifications
   const [notifications, setNotifications] = useState([
@@ -82,6 +84,15 @@ export default function Header({
         return <AlertCircle className="w-4 h-4 text-orange-500" />;
       default:
         return <Info className="w-4 h-4 text-[#2E5E99] dark:text-blue-400" />;
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Failed to log out", error);
     }
   };
 
@@ -304,10 +315,10 @@ export default function Header({
             >
               <div className="text-right hidden md:block">
                 <div className="text-sm font-bold text-[#0D2440] dark:text-white">
-                  Admin User
+                  {user?.first_name || "Admin"} {user?.last_name || "User"}
                 </div>
                 <div className="text-xs text-[#7BA4D0] dark:text-gray-400">
-                  SK Secretary
+                  {user?.role === "SK_CHAIR" ? "SK Chairperson" : "SK Official"}
                 </div>
               </div>
               <div className="w-10 h-10 bg-linear-to-br from-[#2E5E99] to-[#0D2440] dark:from-blue-600 dark:to-blue-900 rounded-full flex items-center justify-center text-white font-bold shadow-md">
@@ -325,7 +336,7 @@ export default function Header({
                     Signed in as
                   </p>
                   <p className="text-xs text-[#7BA4D0] dark:text-gray-400 truncate">
-                    sk.secretary@gov.ph
+                    {user?.email}
                   </p>
                 </div>
                 <button
@@ -341,7 +352,10 @@ export default function Header({
                   <Settings className="w-4 h-4" /> System Settings
                 </button>
                 <div className="my-2 border-t border-[#E7F0FA] dark:border-gray-700"></div>
-                <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                >
                   <LogOut className="w-4 h-4" /> Sign Out
                 </button>
               </div>

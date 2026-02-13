@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   // Helper: Fetch Role & Check Status
   const fetchUserRole = async (authUser) => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('users')
         .select('*')
         .eq('id', authUser.id)
@@ -26,11 +26,16 @@ export const AuthProvider = ({ children }) => {
         }
         setUser({ ...authUser, ...data });
       } else {
-        setUser(authUser);
+        // If authenticated in Supabase Auth but no profile in 'users' table
+        // We must consider this an error because the app relies on 'role'
+        console.warn("User authenticated but no profile found in 'users' table.");
+        await supabase.auth.signOut();
+        setUser(null);
+        throw new Error("Profile not found. Please contact administrator.");
       }
     } catch (err) {
       console.error("Error fetching user role:", err);
-      // If error (like Pending), force logout state
+      // If error (like Pending or Profile Missing), force logout state
       setUser(null); 
       return { error: err };
     } finally {
