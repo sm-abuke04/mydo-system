@@ -2,15 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 // Component Imports
-import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
-import Dashboard from "./components/Dashboard";
-import ProfileForm from "./components/ProfileForm";
-import ProfileList from "./components/ProfileList";
-import PrintableReport from "./components/PrintableReport";
-import MyProfile from "./components/MyProfile";
-import SystemSettings from "./components/SystemSettings";
-import SKOfficials from "./components/SKOfficials"; // NEW OFFICIALS COMPONENT
+import Sidebar from "../sk-system/components/Sidebar";
+import Header from "../sk-system/components/Header";
+import Dashboard from "../sk-system/components/Dashboard";
+import ProfileForm from "../sk-system/components/ProfileForm";
+import ProfileList from "../sk-system/components/ProfileList";
+import PrintableReport from "../sk-system/components/PrintableReport";
+import MyProfile from "../sk-system/components/MyProfile";
+import SystemSettings from "../sk-system/components/SystemSettings";
+import SKOfficials from "../sk-system/components/SKOfficials"; // NEW OFFICIALS COMPONENT
 
 // SERVICE IMPORT (The new data layer)
 import { ProfileService } from "./services/ProfileService";

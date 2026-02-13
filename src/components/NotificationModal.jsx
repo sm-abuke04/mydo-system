@@ -57,10 +57,10 @@ const NotificationModal = ({ isOpen, onClose }) => {
       `}</style>
 
       {/* Invisible backdrop to close when clicking outside */}
-      <div className="fixed inset-0 z-[40]" onClick={onClose}></div>
+      <div className="fixed inset-0 z-40" onClick={onClose}></div>
 
       {/* MODAL CONTAINER with Custom Animation Class */}
-      <div className="animate-modal-enter absolute top-full right-0 mt-3 w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-800 z-[50] overflow-hidden origin-top-right transition-colors duration-300">
+      <div className="animate-modal-enter absolute top-full right-0 mt-3 w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-800 z-50 overflow-hidden origin-top-right transition-colors duration-300">
         
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-gray-50/80 dark:bg-slate-900/80 backdrop-blur-sm transition-colors">
@@ -74,7 +74,7 @@ const NotificationModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* List */}
-        <div className="max-h-[400px] overflow-y-auto">
+        <div className="max-h-100 overflow-y-auto">
           {notifications.map((notif) => (
             <div 
               key={notif.id} 

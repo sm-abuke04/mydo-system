@@ -32,7 +32,7 @@ const BarangayOfficialsModal = ({ isOpen, onClose, barangay }) => {
 
   return (
     // MAIN BACKDROP
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-[#0D2440]/40 dark:bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200 transition-colors">
+    <div className="fixed inset-0 z-1000 flex items-center justify-center p-4 bg-[#0D2440]/40 dark:bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200 transition-colors">
       
       {/* Container */}
       <div className={`bg-white dark:bg-slate-900 w-full rounded-3xl shadow-2xl overflow-hidden flex flex-col transition-all duration-500 ease-in-out border border-transparent dark:border-slate-700 ${
@@ -128,7 +128,7 @@ const BarangayOfficialsModal = ({ isOpen, onClose, barangay }) => {
                 <div className="w-16 h-16 bg-[#0D2440] dark:bg-blue-600 text-white rounded-full flex items-center justify-center ring-4 ring-white dark:ring-slate-900 shadow-xl mb-2 transition-all">
                   <ShieldCheck size={28} />
                 </div>
-                <div className="bg-white dark:bg-slate-800 px-6 py-2 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 text-center min-w-[200px] transition-colors">
+                <div className="bg-white dark:bg-slate-800 px-6 py-2 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 text-center min-w-50 transition-colors">
                   <p className="text-sm font-black text-gray-900 dark:text-white transition-colors">{officials.chairperson.name}</p>
                   <p className="text-[9px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest transition-colors">SK Chairperson</p>
                 </div>

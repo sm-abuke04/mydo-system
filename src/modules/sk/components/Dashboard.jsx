@@ -1,28 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
-  Users,
-  User,
-  GraduationCap,
-  Briefcase,
-  TrendingUp,
-  Calendar,
-  FileText,
-  ArrowLeft,
-  Upload,
-  Activity,
-  Database,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  FileBox,
-  Eye,
+  Users, User, GraduationCap, Briefcase, TrendingUp, Calendar, FileText,
+  ArrowLeft, Upload, Activity, Database, Clock, CheckCircle2, AlertCircle,
+  FileBox, Eye, Loader2
 } from "lucide-react";
+import { SKReportService } from "../services/SKReportService"; // Import new service
 
 export default function Dashboard({ profiles, setView }) {
   const [showReports, setShowReports] = useState(false);
+  const [reports, setReports] = useState([]);
+  const [isLoadingReports, setIsLoadingReports] = useState(false);
 
-  // --- STATS DATA ---
+  // FETCH REPORTS WHEN TOGGLED
+  useEffect(() => {
+    if (showReports) {
+      const loadReports = async () => {
+        setIsLoadingReports(true);
+        try {
+          const data = await SKReportService.getReports();
+          setReports(data || []);
+        } catch (error) {
+          console.error("Failed to load reports");
+        } finally {
+          setIsLoadingReports(false);
+        }
+      };
+      loadReports();
+    }
+  }, [showReports]);
+
+  // --- CLIENT-SIDE STATS CALCULATION (From 'profiles' prop) ---
   const stats = [
     {
       label: "Total Youth",
@@ -47,17 +55,14 @@ export default function Dashboard({ profiles, setView }) {
     },
     {
       label: "In School",
-      value: profiles.filter((p) => p.youthClassification.includes("In School"))
-        .length,
+      value: profiles.filter((p) => (p.youthClassification || "").includes("In School")).length,
       icon: GraduationCap,
       iconColor: "text-[#0D2440] dark:text-gray-300",
       bg: "bg-[#E7F0FA] dark:bg-gray-700/50",
     },
     {
       label: "Out of School",
-      value: profiles.filter((p) =>
-        p.youthClassification.includes("Out of School"),
-      ).length,
+      value: profiles.filter((p) => (p.youthClassification || "").includes("Out of School")).length,
       icon: GraduationCap,
       iconColor: "text-orange-500",
       bg: "bg-orange-50 dark:bg-orange-900/20",
@@ -85,51 +90,27 @@ export default function Dashboard({ profiles, setView }) {
     },
   ];
 
-  // --- REPORTS DATA STRUCTURE ---
-  const reportGroups = [
-    {
-      title: "Annual Requirements",
-      frequency: "Once a year",
-      items: [
-        {
-          name: "CBYDP (3 Annum Coverage)",
-          status: "Submitted",
-          date: "Jan 15, 2024",
-        },
-        { name: "ABYIP", status: "Submitted", date: "Jan 20, 2024" },
-        { name: "Annual Budget", status: "Pending", date: "-" },
-        { name: "KK Profiling", status: "In Progress", date: "-" },
-        { name: "SK Directory", status: "Submitted", date: "Jan 10, 2024" },
-        { name: "Fund Utilization Report", status: "Pending", date: "-" },
-        { name: "ABYIP Monitoring Form", status: "Pending", date: "-" },
-      ],
-    },
-    {
-      title: "Quarterly Requirements",
-      frequency: "Every 3 months (Q1-Q4)",
-      items: [
-        {
-          name: "SK FPDP Board Compliance - Q1",
-          status: "Submitted",
-          date: "Mar 31, 2024",
-        },
-        { name: "SK FPDP Board Compliance - Q2", status: "Pending", date: "-" },
-        { name: "SK FPDP Board Compliance - Q3", status: "Pending", date: "-" },
-        { name: "SK FPDP Board Compliance - Q4", status: "Pending", date: "-" },
-      ],
-    },
-    {
-      title: "Monthly Requirements",
-      frequency: "Every month",
-      items: [
-        {
-          name: "SK Session Documents (Current Month)",
-          status: "Pending",
-          date: "-",
-        },
-      ],
-    },
-  ];
+  // GROUP REPORTS BY CATEGORY (Helper function)
+  const groupReports = () => {
+    // Defines structure even if empty
+    const groups = {
+      "Annual Requirements": [],
+      "Quarterly Requirements": [],
+      "Monthly Requirements": []
+    };
+
+    reports.forEach(r => {
+      if (groups[r.category]) {
+        groups[r.category].push(r);
+      }
+    });
+
+    return Object.entries(groups).map(([title, items]) => ({
+      title,
+      items,
+      frequency: title.includes("Annual") ? "Once a year" : title.includes("Quarterly") ? "Every 3 months" : "Every month"
+    }));
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -202,9 +183,7 @@ export default function Dashboard({ profiles, setView }) {
                   <div className={`p-3 rounded-lg ${stat.bg}`}>
                     <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
                   </div>
-                  {idx === 0 && (
-                    <TrendingUp className="w-5 h-5 text-green-500" />
-                  )}
+                  {idx === 0 && <TrendingUp className="w-5 h-5 text-green-500" />}
                 </div>
                 <div className="text-3xl font-bold text-[#0D2440] dark:text-white mb-1">
                   {stat.value}
@@ -243,10 +222,10 @@ export default function Dashboard({ profiles, setView }) {
                             <p className="text-sm font-medium text-[#0D2440] dark:text-gray-200">
                               New profile added:{" "}
                               <Link
-                                to={`/edit/${profile.id}`}
+                                to={`/sk/edit/${profile.id}`}
                                 className="text-[#2E5E99] dark:text-blue-400 font-bold hover:underline ml-1"
                               >
-                                {profile.firstName} {profile.lastName}
+                                {profile.first_name || profile.firstName} {profile.last_name || profile.lastName}
                               </Link>
                             </p>
                             <p className="text-xs text-[#7BA4D0] dark:text-gray-500 font-semibold">
@@ -254,7 +233,7 @@ export default function Dashboard({ profiles, setView }) {
                             </p>
                           </div>
                           <div className="text-xs font-mono text-[#7BA4D0] dark:text-gray-400 bg-[#E7F0FA] dark:bg-gray-800 px-2 py-1 rounded">
-                            Just now
+                            {new Date(profile.created_at || Date.now()).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
@@ -272,74 +251,52 @@ export default function Dashboard({ profiles, setView }) {
           </div>
         </>
       ) : (
-        /* --- SK REPORTS CONTENT --- */
+        /* --- SK REPORTS CONTENT (Dynamic) --- */
         <div className="animate-in slide-in-from-bottom-2 duration-300 grid gap-8">
-          {reportGroups.map((group, gIdx) => (
-            <div
-              key={gIdx}
-              className="bg-white dark:bg-[#1e293b] rounded-xl shadow-lg border border-[#E7F0FA] dark:border-gray-700 overflow-hidden"
-            >
-              {/* Section Header */}
-              <div className="px-6 py-4 bg-[#E7F0FA]/50 dark:bg-gray-800/50 border-b border-[#E7F0FA] dark:border-gray-700 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#2E5E99] text-white rounded-lg">
-                    <FileBox className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-[#0D2440] dark:text-white">
-                      {group.title}
-                    </h3>
-                    <p className="text-xs text-[#7BA4D0] dark:text-gray-400 uppercase tracking-wider font-bold">
-                      {group.frequency}
-                    </p>
+          {isLoadingReports ? (
+             <div className="flex justify-center p-12"><Loader2 className="animate-spin text-blue-500" /></div>
+          ) : (
+             groupReports().map((group, gIdx) => (
+               <div key={gIdx} className="bg-white dark:bg-[#1e293b] rounded-xl shadow-lg border border-[#E7F0FA] dark:border-gray-700 overflow-hidden">
+                <div className="px-6 py-4 bg-[#E7F0FA]/50 dark:bg-gray-800/50 border-b border-[#E7F0FA] dark:border-gray-700 flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-[#2E5E99] text-white rounded-lg">
+                      <FileBox className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-[#0D2440] dark:text-white">{group.title}</h3>
+                      <p className="text-xs text-[#7BA4D0] dark:text-gray-400 uppercase tracking-wider font-bold">{group.frequency}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Items List */}
-              <div className="p-4 grid gap-3 md:grid-cols-2">
-                {group.items.map((item, iIdx) => (
-                  <div
-                    key={iIdx}
-                    className="flex items-center justify-between p-4 border border-[#E7F0FA] dark:border-gray-700 rounded-xl hover:bg-[#E7F0FA] dark:hover:bg-gray-700/50 transition-all group"
-                  >
-                    <div>
-                      <h4 className="font-bold text-[#0D2440] dark:text-gray-200 text-sm mb-1">
-                        {item.name}
-                      </h4>
-                      <div className="flex items-center gap-3">
-                        {getStatusBadge(item.status)}
-                        {item.date !== "-" && (
-                          <span className="text-xs text-[#7BA4D0] dark:text-gray-500">
-                            Sub: {item.date}
-                          </span>
-                        )}
+                <div className="p-4 grid gap-3 md:grid-cols-2">
+                  {group.items.length > 0 ? group.items.map((item, iIdx) => (
+                    <div key={iIdx} className="flex items-center justify-between p-4 border border-[#E7F0FA] dark:border-gray-700 rounded-xl hover:bg-[#E7F0FA] dark:hover:bg-gray-700/50 transition-all group">
+                      <div>
+                        <h4 className="font-bold text-[#0D2440] dark:text-gray-200 text-sm mb-1">{item.name}</h4>
+                        <div className="flex items-center gap-3">
+                          {getStatusBadge(item.status)}
+                          {item.submitted_at && (
+                            <span className="text-xs text-[#7BA4D0] dark:text-gray-500">
+                              Sub: {new Date(item.submitted_at).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button className="p-2 text-white bg-[#2E5E99] rounded-lg hover:bg-[#0D2440] hover:shadow-md transition-all" title="Upload Document">
+                          <Upload className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-
-                    {/* ACTION BUTTONS (Upload & View) */}
-                    <div className="flex items-center gap-2">
-                      {/* Upload Button */}
-                      <button
-                        className="p-2 text-white bg-[#2E5E99] rounded-lg hover:bg-[#0D2440] hover:shadow-md transition-all"
-                        title="Upload Document"
-                      >
-                        <Upload className="w-4 h-4" />
-                      </button>
-
-                      {/* View Button */}
-                      <button
-                        className="p-2 text-[#7BA4D0] bg-transparent border border-[#E7F0FA] dark:border-gray-600 rounded-lg hover:text-[#2E5E99] hover:bg-white dark:hover:text-white dark:hover:bg-gray-600 transition-all"
-                        title="View File"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  )) : (
+                    <div className="col-span-2 text-center text-gray-400 text-sm py-4 italic">No pending requirements for this category.</div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+             ))
+          )}
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext();
 
@@ -7,58 +7,71 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 1. Check LocalStorage on Load (Persist Login)
   useEffect(() => {
-    const storedUser = localStorage.getItem('mydo_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    // 1. Check active session on load
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await fetchUserRole(session.user);
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // 2. Listen for auth changes (Login/Logout)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        await fetchUserRole(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
-  // 2. Mock Login Function (Replace with API/Supabase later)
-  const login = async (username, password) => {
-    // Simulate Network Delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+  // Helper: Fetch Custom Role (MYDO_ADMIN vs SK_CHAIR)
+  // We assume there is a 'users' table linking auth.uid to a role
+  const fetchUserRole = async (authUser) => {
+    try {
+      const { data, error } = await supabase
+        .from('users') // We will create this table in the DB setup step
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
 
-    // --- MOCK CREDENTIALS LOGIC ---
-    let userData = null;
-
-    if (username === 'admin' && password === 'admin123') {
-      // SCENARIO 1: MYDO Admin
-      userData = {
-        id: 1,
-        username: 'admin',
-        firstName: 'Jules',
-        lastName: 'Admin',
-        role: 'MYDO_ADMIN',
-        avatar: null
-      };
-    } else if (username === 'sk_poblacion' && password === 'sk123') {
-      // SCENARIO 2: SK Chairperson (Barangay Specific)
-      userData = {
-        id: 2,
-        username: 'sk_poblacion',
-        firstName: 'Juan',
-        lastName: 'Dela Cruz',
-        role: 'SK_CHAIR', // or 'SK_SEC'
-        barangay: 'Poblacion',
-        avatar: null
-      };
-    } else {
-      throw new Error('Invalid username or password');
+      if (data) {
+        setUser({ ...authUser, ...data }); // Merge Auth data with Profile data
+      } else {
+        // Fallback if no profile found (rare)
+        setUser(authUser);
+      }
+    } catch (err) {
+      console.error("Error fetching user role:", err);
+    } finally {
+      setLoading(false);
     }
-
-    // Success: Save to State and Storage
-    setUser(userData);
-    localStorage.setItem('mydo_user', JSON.stringify(userData));
-    return userData;
   };
 
-  // 3. Logout Function
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('mydo_user');
+  // 3. Login Function
+  const login = async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+    return data;
+  };
+
+  // 4. Logout Function
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
@@ -68,7 +81,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom Hook for easier usage
 export const useAuth = () => {
   return useContext(AuthContext);
 };

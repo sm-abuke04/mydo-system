@@ -25,10 +25,10 @@ const UserSettingsModal = ({ isOpen, onClose, initialTab = 'profile', isDarkMode
   return (
     <>
       {/* Dark Backdrop */}
-      <div className="fixed inset-0 bg-[#0D2440]/40 backdrop-blur-sm z-[60] animate-in fade-in duration-200" onClick={onClose}></div>
+      <div className="fixed inset-0 bg-[#0D2440]/40 backdrop-blur-sm z-60 animate-in fade-in duration-200" onClick={onClose}></div>
 
       {/* SINGLE Modal Container (Fixed the duplicate issue) */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[600px] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl z-[70] flex overflow-hidden animate-in fade-in zoom-in-95 duration-200 transition-colors">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-150 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl z-70 flex overflow-hidden animate-in fade-in zoom-in-95 duration-200 transition-colors">
         
         {/* --- LEFT SIDEBAR (TABS) --- */}
         <div className="w-64 bg-gray-50 dark:bg-slate-800 border-r border-gray-100 dark:border-slate-700 flex flex-col transition-colors">
@@ -183,7 +183,7 @@ const UserSettingsModal = ({ isOpen, onClose, initialTab = 'profile', isDarkMode
                         onChange={() => setIsDarkMode(!isDarkMode)} 
                       />
 
-                      <div className="w-9 h-5 bg-gray-200 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                   </div>
                 </div>
@@ -220,7 +220,7 @@ const UserSettingsModal = ({ isOpen, onClose, initialTab = 'profile', isDarkMode
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-9 h-5 bg-gray-200 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                   </div>
 
@@ -232,7 +232,7 @@ const UserSettingsModal = ({ isOpen, onClose, initialTab = 'profile', isDarkMode
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-9 h-5 bg-gray-200 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                   </div>
                 </div>
