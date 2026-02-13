@@ -13,11 +13,11 @@ export default function ProfileList({ profiles, onSearch }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // --- FILTERING ---
-  const filteredProfiles = profiles.filter((profile) =>
-    `${profile.first_name} ${profile.last_name} ${profile.skmt_no}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+  const filteredProfiles = profiles.filter((profile) => {
+    if (!profile) return false;
+    const searchString = `${profile.first_name || ""} ${profile.last_name || ""} ${profile.skmt_no || ""}`;
+    return searchString.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   // --- PAGINATION ---
   const totalPages = Math.ceil(filteredProfiles.length / itemsPerPage);
@@ -33,8 +33,9 @@ export default function ProfileList({ profiles, onSearch }) {
     setIsDeleting(true);
     try {
       await ProfileService.delete(id);
-      onSearch(); // Refresh the list
+      if (onSearch) onSearch(); // Refresh the list
     } catch (error) {
+      console.error("Delete error:", error);
       alert("Failed to delete profile. Please try again.");
     } finally {
       setIsDeleting(false);

@@ -15,7 +15,8 @@ export const ProfileService = {
 
       if (query) {
         // Search by First Name, Last Name, or SKMT Number (Case Insensitive)
-        dbQuery = dbQuery.or(`firstName.ilike.%${query}%,lastName.ilike.%${query}%,skmtNo.ilike.%${query}%`);
+        // Fixed: Use snake_case column names to match database schema
+        dbQuery = dbQuery.or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,skmt_no.ilike.%${query}%`);
       }
 
       const { data, error } = await dbQuery;
@@ -49,6 +50,7 @@ export const ProfileService = {
   create: async (profileData) => {
     try {
       // Remove 'id' if it exists to let Supabase auto-generate it
+      // eslint-disable-next-line no-unused-vars
       const { id, ...dataToInsert } = profileData;
       
       const { data, error } = await supabase

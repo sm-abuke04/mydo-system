@@ -2,7 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, UserPlus, FileText, Printer, Shield } from "lucide-react";
 
-export default function Sidebar({ sidebarOpen, profileCount }) {
+export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
   // Dynamic Link Class
   const getLinkClass = ({ isActive }) =>
     `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
