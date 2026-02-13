@@ -41,6 +41,31 @@ export default function ProfileForm() {
     }
   }, [id, navigate]);
 
+  // AGE CALCULATION EFFECT
+  useEffect(() => {
+    if (formData.birthday) {
+      const birthDate = new Date(formData.birthday);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+
+      // Update age if different
+      if (formData.age !== age) {
+        setFormData(prev => {
+          const updates = { ...prev, age };
+          // If age becomes < 18, clear work status
+          if (age < 18) {
+            updates.workStatus = "";
+          }
+          return updates;
+        });
+      }
+    }
+  }, [formData.birthday, formData.age]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -79,6 +104,8 @@ export default function ProfileForm() {
       setIsSaving(false);
     }
   };
+
+  const isWorkStatusDisabled = !formData.age || formData.age < 18;
 
   if (isLoading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-blue-600"/></div>;
 
@@ -135,7 +162,14 @@ export default function ProfileForm() {
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Age</label>
-              <input type="number" name="age" value={formData.age} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
+              <input
+                type="number"
+                name="age"
+                value={formData.age}
+                readOnly
+                className="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                placeholder="Auto-calc"
+              />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Birthday</label>
@@ -202,9 +236,19 @@ export default function ProfileForm() {
              </div>
 
              <div className="space-y-1">
-               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Work Status</label>
-               <select name="workStatus" value={formData.workStatus} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
-                  <option value="">Select Status</option>
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">
+                 Work Status {isWorkStatusDisabled && <span className="text-[10px] text-red-500 normal-case ml-1">(18+ only)</span>}
+               </label>
+               <select
+                 name="workStatus"
+                 value={formData.workStatus}
+                 onChange={handleChange}
+                 disabled={isWorkStatusDisabled}
+                 className={`w-full p-3 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white transition-colors
+                   ${isWorkStatusDisabled ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-gray-800'}
+                 `}
+               >
+                  <option value="">{isWorkStatusDisabled ? "N/A" : "Select Status"}</option>
                   {WORK_STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                </select>
              </div>
