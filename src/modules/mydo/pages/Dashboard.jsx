@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Users, GraduationCap, Briefcase, MapPin, Download, Loader2 } from 'lucide-react';
-import { MydoService } from '../services/MydoService';
+import { MydoService } from '../services/MYDOService';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({

@@ -16,7 +16,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import SKLogo from "../assets/sk-logo.png";
+import SKLogo from "../assets/sk-logo.png"; // Ensure you have this asset in the correct path
 
 export default function Header({
   view,

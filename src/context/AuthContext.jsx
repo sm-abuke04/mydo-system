@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 const AuthContext = createContext();
 
@@ -7,8 +7,38 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Helper: Fetch Role & Check Status
+  const fetchUserRole = async (authUser) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (data) {
+        // ENFORCE PENDING CHECK
+        if (data.status === 'Pending') {
+           // If pending, do not set user state (keeps them logged out in UI)
+           // But strictly speaking we should sign them out from Supabase too
+           await supabase.auth.signOut();
+           throw new Error("Account Pending");
+        }
+        setUser({ ...authUser, ...data });
+      } else {
+        setUser(authUser);
+      }
+    } catch (err) {
+      console.error("Error fetching user role:", err);
+      // If error (like Pending), force logout state
+      setUser(null); 
+      return { error: err };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // 1. Check active session on load
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -17,10 +47,8 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       }
     };
-
     checkSession();
 
-    // 2. Listen for auth changes (Login/Logout)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await fetchUserRole(session.user);
@@ -35,41 +63,24 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  // Helper: Fetch Custom Role (MYDO_ADMIN vs SK_CHAIR)
-  // We assume there is a 'users' table linking auth.uid to a role
-  const fetchUserRole = async (authUser) => {
-    try {
-      const { data, error } = await supabase
-        .from('users') // We will create this table in the DB setup step
-        .select('*')
-        .eq('id', authUser.id)
-        .single();
-
-      if (data) {
-        setUser({ ...authUser, ...data }); // Merge Auth data with Profile data
-      } else {
-        // Fallback if no profile found (rare)
-        setUser(authUser);
-      }
-    } catch (err) {
-      console.error("Error fetching user role:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 3. Login Function
   const login = async (email, password) => {
+    // 1. Authenticate with Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) throw error;
-    return data;
+    if (error) return { error };
+
+    // 2. Fetch Profile & Check Status
+    const roleCheck = await fetchUserRole(data.user);
+    
+    // If fetchUserRole returned an error (like "Account Pending"), pass it up
+    if (roleCheck?.error) return { error: roleCheck.error };
+
+    return { user: data.user };
   };
 
-  // 4. Logout Function
   const logout = async () => {
     await supabase.auth.signOut();
   };
@@ -81,6 +92,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
