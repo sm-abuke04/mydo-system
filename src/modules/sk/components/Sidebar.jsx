@@ -1,8 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, UserPlus, FileText, Printer, Shield } from "lucide-react";
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
+  // Check if we are on mobile (simplistic check)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
   // Dynamic Link Class
   const getLinkClass = ({ isActive }) =>
     `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
@@ -22,7 +37,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
     `}
     >
       <nav className="flex-1 p-4 space-y-2 pt-6">
-        <NavLink to="/dashboard" className={getLinkClass}>
+        <NavLink to="dashboard" onClick={handleLinkClick} className={getLinkClass}>
           <LayoutDashboard className="w-5 h-5 shrink-0" />
           <span
             className={`transition-opacity duration-200 whitespace-nowrap ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
@@ -31,20 +46,16 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
           </span>
         </NavLink>
 
-        <NavLink
-          to="/officials"
-          onClick={() => setSidebarOpen(false)}
-          className={getLinkClass}
-        >
+        <NavLink to="officials" onClick={handleLinkClick} className={getLinkClass}>
           <Shield className="w-5 h-5 shrink-0" />
           <span
-            className={`whitespace-nowrap transition-all duration-300 ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden lg:opacity-100 lg:w-auto"}`}
+            className={`transition-opacity duration-200 whitespace-nowrap ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
           >
             SK Officials
           </span>
         </NavLink>
 
-        <NavLink to="/add" className={getLinkClass}>
+        <NavLink to="add" onClick={handleLinkClick} className={getLinkClass}>
           <UserPlus className="w-5 h-5 shrink-0" />
           <span
             className={`transition-opacity duration-200 whitespace-nowrap ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
@@ -53,13 +64,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
           </span>
         </NavLink>
 
-        <NavLink to="/list" className={getLinkClass}>
+        <NavLink to="list" onClick={handleLinkClick} className={getLinkClass}>
           <FileText className="w-5 h-5 shrink-0" />
           <span
             className={`transition-opacity duration-200 whitespace-nowrap flex-1 text-left ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
           >
             View Profiles
           </span>
+          {/* Badge shows next to text when open, or as a dot/number overlay when closed if needed */}
           {sidebarOpen && profileCount > 0 && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-[#2E5E99] text-white font-medium dark:bg-blue-500">
               {profileCount}
@@ -68,7 +80,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
         </NavLink>
 
         <div className="pt-4 mt-4 border-t border-[#E7F0FA] dark:border-gray-800">
-          <NavLink to="/report" className={getLinkClass}>
+          <NavLink to="report" onClick={handleLinkClick} className={getLinkClass}>
             <Printer className="w-5 h-5 shrink-0" />
             <span
               className={`transition-opacity duration-200 whitespace-nowrap ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
