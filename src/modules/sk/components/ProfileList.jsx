@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Search, Edit, Trash2, Eye, MoreVertical,
-  ChevronLeft, ChevronRight, Filter
+  ChevronLeft, ChevronRight, Filter, Briefcase, GraduationCap
 } from "lucide-react";
 import { ProfileService } from "../services/ProfileService";
 
@@ -79,10 +79,9 @@ export default function ProfileList({ profiles, onSearch, onDelete }) {
           <thead className="bg-[#E7F0FA]/50 dark:bg-gray-800/50 sticky top-0 z-10">
             <tr>
               <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">SKMT ID</th>
-              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">Full Name</th>
-              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">Age / Gender</th>
-              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">Barangay</th>
-              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">Status</th>
+              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">Profile Details</th>
+              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">Work & Education</th>
+              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">Classification</th>
               <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider text-right">Actions</th>
             </tr>
           </thead>
@@ -90,38 +89,68 @@ export default function ProfileList({ profiles, onSearch, onDelete }) {
             {paginatedProfiles.length > 0 ? (
               paginatedProfiles.map((profile) => (
                 <tr key={profile.id} className="hover:bg-[#E7F0FA]/50 dark:hover:bg-gray-700/30 transition-colors group">
-                  <td className="px-6 py-4 text-sm font-bold text-[#2E5E99] dark:text-blue-400 font-mono">
+                  <td className="px-6 py-4 text-sm font-bold text-[#2E5E99] dark:text-blue-400 font-mono align-top pt-5">
                     {profile.skmtNo || "---"}
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col">
+                  <td className="px-6 py-4 align-top">
+                    <div className="flex flex-col gap-1">
                       <span className="text-sm font-bold text-[#0D2440] dark:text-white">
                         {profile.lastName}, {profile.firstName}
                       </span>
-                      <span className="text-xs text-[#7BA4D0] dark:text-gray-500">{profile.email || "No email"}</span>
+                      <div className="flex items-center gap-2 text-xs text-[#7BA4D0] dark:text-gray-500">
+                         <span>{profile.age} yrs old • {profile.sex}</span>
+                         <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                         <span>{profile.civilStatus}</span>
+                      </div>
+                      <span className="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">
+                        Brgy. {profile.barangay} {profile.purokZone && `(Prk. ${profile.purokZone})`}
+                      </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-[#0D2440] dark:text-gray-300">
-                    {profile.age} <span className="text-[#7BA4D0] mx-1">•</span> {profile.sex}
+                  <td className="px-6 py-4 align-top">
+                    <div className="flex flex-col gap-2">
+                        {profile.workStatus && (
+                            <span className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
+                                <Briefcase className="w-3 h-3 text-[#2E5E99]" /> {profile.workStatus}
+                            </span>
+                        )}
+                        {profile.educationalBackground && (
+                            <span className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
+                                <GraduationCap className="w-3 h-3 text-orange-500" /> {profile.educationalBackground}
+                            </span>
+                        )}
+                        {!profile.workStatus && !profile.educationalBackground && <span className="text-xs text-gray-400 italic">No info</span>}
+                    </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 text-xs font-bold">
-                      {profile.barangay}
-                    </span>
+                  <td className="px-6 py-4 align-top pt-5">
+                     <div className="flex flex-wrap gap-1">
+                        {/* Display Youth Age Group if available */}
+                        {profile.youthAgeGroup && (
+                            <span className="px-2 py-1 rounded-md bg-purple-50 text-purple-600 border border-purple-100 text-[10px] font-bold uppercase">
+                                {profile.youthAgeGroup.split(' ')[0]}
+                            </span>
+                        )}
+
+                        {/* Display Classification Badge */}
+                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase border ${
+                        (Array.isArray(profile.youthClassification) ? profile.youthClassification : [profile.youthClassification]).includes('In School Youth')
+                            ? 'bg-green-50 text-green-600 border-green-100'
+                            : 'bg-orange-50 text-orange-600 border-orange-100'
+                        }`}>
+                        {Array.isArray(profile.youthClassification) && profile.youthClassification.length > 0
+                            ? (profile.youthClassification.includes('In School Youth') ? 'In School' : 'Out of School')
+                            : (profile.youthClassification || "Unclassified")}
+                        </span>
+
+                        {/* More indicator */}
+                        {Array.isArray(profile.youthClassification) && profile.youthClassification.length > 1 && (
+                            <span className="px-1.5 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold" title={profile.youthClassification.join(', ')}>
+                                +{profile.youthClassification.length - 1}
+                            </span>
+                        )}
+                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                     {/* Updated logic for array-based youthClassification */}
-                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase border ${
-                      (Array.isArray(profile.youthClassification) ? profile.youthClassification : [profile.youthClassification]).includes('In School Youth')
-                        ? 'bg-green-50 text-green-600 border-green-100' 
-                        : 'bg-orange-50 text-orange-600 border-orange-100'
-                    }`}>
-                      {Array.isArray(profile.youthClassification)
-                         ? (profile.youthClassification[0] || "Unclassified") + (profile.youthClassification.length > 1 ? ` +${profile.youthClassification.length - 1}` : "")
-                         : (profile.youthClassification || "Unclassified")}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right align-top pt-5">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Link to={`/sk/edit/${profile.id}`} className="p-2 text-[#2E5E99] bg-blue-50 hover:bg-[#2E5E99] hover:text-white rounded-lg transition-colors">
                         <Edit className="w-4 h-4" />
