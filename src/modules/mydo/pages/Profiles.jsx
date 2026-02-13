@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import AddProfileModal from '../components/AddProfileModal';
 import { MydoService } from '../services/MYDOService'; // Import Service
+import { BARANGAYS } from '../data/Barangays'; // Source of Truth for Barangays
+import { supabase } from '@/lib/supabase';
 
 const Profiles = () => {
   // --- STATE ---
@@ -12,7 +14,7 @@ const Profiles = () => {
   const [selectedBarangay, setSelectedBarangay] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Data State (No more mock data)
+  // Data State
   const [barangays, setBarangays] = useState([]);
   const [profiles, setProfiles] = useState([]);
 
@@ -38,14 +40,36 @@ const Profiles = () => {
 
   // --- DATA FETCHING ---
 
-  // 1. Fetch Barangays on Load
+  // 1. Fetch Barangays and Merge with User Access Data
   useEffect(() => {
     const loadBarangays = async () => {
       try {
-        const data = await MydoService.getAllBarangays();
-        setBarangays(data || []);
+        setIsLoading(true);
+        // Fetch active SK Chairs to determine status and chairman name
+        const { data: skUsers, error } = await supabase
+            .from('users')
+            .select('first_name, last_name, barangay, role, status')
+            .eq('status', 'Active')
+            .in('role', ['SK_CHAIR', 'SK_SEC']); // Assuming Chair or Sec grants access
+
+        if (error) throw error;
+
+        // Map static BARANGAYS list to dynamic data
+        const mergedBarangays = BARANGAYS.map(staticBrgy => {
+            const activeSK = skUsers?.find(u => u.barangay === staticBrgy.name);
+            return {
+                ...staticBrgy,
+                status: activeSK ? 'Active' : 'No Access',
+                chairman: activeSK ? `${activeSK.first_name} ${activeSK.last_name}` : '---',
+                total_youth: 0 // Ideally fetch this count separately if needed
+            };
+        });
+
+        setBarangays(mergedBarangays);
       } catch (err) {
         console.error("Failed to load barangays", err);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadBarangays();
@@ -88,6 +112,10 @@ const Profiles = () => {
 
   // --- HANDLERS ---
   const handleViewBarangay = (barangay) => {
+    if (barangay.status !== 'Active') {
+        alert("This barangay does not have an active SK account.");
+        return;
+    }
     setSelectedBarangay(barangay);
     setCurrentView('profiles');
     setSearchTerm(''); // Reset search when entering a barangay
@@ -113,9 +141,7 @@ const Profiles = () => {
         });
       }
       setIsModalOpen(false);
-      // Trigger re-fetch logic (simplest way is to toggle a refresh state, or rely on dependency)
-      // For now, let's just force a reload by toggling view or refetching:
-      window.location.reload(); // Temporary; ideally update 'profiles' state directly
+      window.location.reload();
     } catch (error) {
       alert("Failed to save profile");
     }
@@ -124,9 +150,8 @@ const Profiles = () => {
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-8 h-full shadow-sm flex flex-col transition-colors duration-300">
       
-      {/* HEADER & FILTERS (Keep existing JSX structure) */}
+      {/* HEADER & FILTERS */}
       <div className="flex justify-between items-start mb-8 shrink-0">
-         {/* ... (Title and Back Button Logic remains same) ... */}
          <div>
           {currentView === 'barangays' ? (
             <>
@@ -146,14 +171,13 @@ const Profiles = () => {
           )}
         </div>
 
-        {/* ... (Filter Button Logic remains same) ... */}
          <div className="flex gap-3">
             <div className="relative">
                 <button onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)} className="flex items-center gap-2 px-4 py-2 border border-gray-100 dark:border-slate-700 rounded-xl text-sm font-bold text-gray-500 dark:text-slate-300">
                     <Filter size={18} /> Filter
                 </button>
-                {/* ... Dropdown content ... */}
             </div>
+            {/* ADD PROFILE BUTTON */}
             {currentView === 'profiles' && (
                 <button onClick={() => { setModalMode('add'); setSelectedProfile(null); setIsModalOpen(true); }} className="flex items-center gap-2 px-6 py-2.5 bg-[#0D2440] dark:bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg">
                 <UserPlus size={18} /> Add Profile
@@ -176,7 +200,7 @@ const Profiles = () => {
 
       {/* DATA TABLE AREA */}
       <div className="flex-1 overflow-auto pr-2 relative">
-        {isLoading && (
+        {isLoading && currentView === 'barangays' && (
             <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 z-20 flex items-center justify-center">
                 <Loader2 className="animate-spin text-blue-600" size={32} />
             </div>
@@ -187,7 +211,7 @@ const Profiles = () => {
              <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10">
                 <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 border-b border-gray-100 dark:border-slate-800">
                     <th className="pb-4 px-4">Barangay</th>
-                    <th className="pb-4 px-4">SK Chairman</th>
+                    <th className="pb-4 px-4">SK Official</th>
                     <th className="pb-4 px-4 text-center">Total Youth</th>
                     <th className="pb-4 px-4">Status</th>
                     <th className="pb-4 px-4 text-right">Action</th>
@@ -195,7 +219,7 @@ const Profiles = () => {
              </thead>
              <tbody className="divide-y divide-gray-50 dark:divide-slate-800/50">
                 {filteredBarangays.map((brgy) => (
-                    <tr key={brgy.id} onClick={() => handleViewBarangay(brgy)} className="group hover:bg-[#F8FAFC] dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
+                    <tr key={brgy.id} className="group hover:bg-[#F8FAFC] dark:hover:bg-slate-800/50 transition-colors">
                         <td className="py-4 px-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><MapPin size={18} /></div>
@@ -205,7 +229,7 @@ const Profiles = () => {
                                 </div>
                             </div>
                         </td>
-                        <td className="py-4 px-4 text-sm font-bold text-gray-700 dark:text-slate-300">{brgy.chairman || '---'}</td>
+                        <td className="py-4 px-4 text-sm font-bold text-gray-700 dark:text-slate-300">{brgy.chairman}</td>
                         <td className="py-4 px-4 text-center">
                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-50 dark:bg-slate-800 rounded-lg text-sm font-black text-[#0D2440] dark:text-white">
                                 <Users size={14} className="text-blue-500" /> {brgy.total_youth || 0}
@@ -215,7 +239,13 @@ const Profiles = () => {
                             <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${brgy.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>{brgy.status}</span>
                         </td>
                         <td className="py-4 px-4 text-right">
-                            <button className="px-4 py-2 text-xs font-bold border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200">View Profiles</button>
+                            <button
+                                onClick={() => handleViewBarangay(brgy)}
+                                disabled={brgy.status !== 'Active'}
+                                className={`px-4 py-2 text-xs font-bold border rounded-xl transition-colors ${brgy.status === 'Active' ? 'border-gray-200 dark:border-slate-700 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 cursor-pointer' : 'border-transparent text-gray-300 cursor-not-allowed'}`}
+                            >
+                                {brgy.status === 'Active' ? 'View Profiles' : 'No Access'}
+                            </button>
                         </td>
                     </tr>
                 ))}
