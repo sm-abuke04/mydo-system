@@ -171,7 +171,7 @@ export default function Header({
 
         {/* CENTER LOGO */}
         <div
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/sk/dashboard")}
           className="hidden md:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center group cursor-pointer z-30"
         >
           <div className="w-16 h-16 bg-transparent border-2 border-[#E7F0FA] dark:border-gray-700 rounded-full flex items-center justify-center shadow-sm group-hover:border-[#2E5E99] dark:group-hover:border-blue-500 transition-all overflow-hidden">
@@ -340,13 +340,13 @@ export default function Header({
                   </p>
                 </div>
                 <button
-                  onClick={() => handleNavigation("/profile")}
+                  onClick={() => handleNavigation("/sk/profile")}
                   className="w-full text-left px-4 py-2 text-sm text-[#0D2440] dark:text-gray-200 hover:bg-[#E7F0FA] dark:hover:bg-gray-700 flex items-center gap-2"
                 >
                   <User className="w-4 h-4" /> My Profile
                 </button>
                 <button
-                  onClick={() => handleNavigation("/settings")}
+                  onClick={() => handleNavigation("/sk/settings")}
                   className="w-full text-left px-4 py-2 text-sm text-[#0D2440] dark:text-gray-200 hover:bg-[#E7F0FA] dark:hover:bg-gray-700 flex items-center gap-2"
                 >
                   <Settings className="w-4 h-4" /> System Settings

@@ -37,7 +37,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
     `}
     >
       <nav className="flex-1 p-4 space-y-2 pt-6">
-        <NavLink to="dashboard" onClick={handleLinkClick} className={getLinkClass}>
+        <NavLink to="/sk/dashboard" onClick={handleLinkClick} className={getLinkClass}>
           <LayoutDashboard className="w-5 h-5 shrink-0" />
           <span
             className={`transition-opacity duration-200 whitespace-nowrap ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
@@ -46,7 +46,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
           </span>
         </NavLink>
 
-        <NavLink to="officials" onClick={handleLinkClick} className={getLinkClass}>
+        <NavLink to="/sk/officials" onClick={handleLinkClick} className={getLinkClass}>
           <Shield className="w-5 h-5 shrink-0" />
           <span
             className={`transition-opacity duration-200 whitespace-nowrap ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
@@ -55,7 +55,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
           </span>
         </NavLink>
 
-        <NavLink to="add" onClick={handleLinkClick} className={getLinkClass}>
+        <NavLink to="/sk/add" onClick={handleLinkClick} className={getLinkClass}>
           <UserPlus className="w-5 h-5 shrink-0" />
           <span
             className={`transition-opacity duration-200 whitespace-nowrap ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
@@ -64,7 +64,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
           </span>
         </NavLink>
 
-        <NavLink to="list" onClick={handleLinkClick} className={getLinkClass}>
+        <NavLink to="/sk/list" onClick={handleLinkClick} className={getLinkClass}>
           <FileText className="w-5 h-5 shrink-0" />
           <span
             className={`transition-opacity duration-200 whitespace-nowrap flex-1 text-left ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
@@ -80,7 +80,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
         </NavLink>
 
         <div className="pt-4 mt-4 border-t border-[#E7F0FA] dark:border-gray-800">
-          <NavLink to="report" onClick={handleLinkClick} className={getLinkClass}>
+          <NavLink to="/sk/report" onClick={handleLinkClick} className={getLinkClass}>
             <Printer className="w-5 h-5 shrink-0" />
             <span
               className={`transition-opacity duration-200 whitespace-nowrap ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
