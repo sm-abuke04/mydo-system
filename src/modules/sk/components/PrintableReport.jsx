@@ -27,6 +27,22 @@ export default function PrintableReport({ profiles }) {
     return p.sex === sex && age >= min && age <= max;
   }).length;
 
+  // Helper for counting youth classification since it's an array
+  const countClassification = (cls, minAge, maxAge) => {
+    return profiles.filter(p => {
+        const age = getAge(p);
+        const classifications = Array.isArray(p.youthClassification) ? p.youthClassification : [p.youthClassification];
+        return age >= minAge && age <= maxAge && classifications.includes(cls);
+    }).length;
+  };
+
+  const countClassificationTotal = (cls) => {
+    return profiles.filter(p => {
+        const classifications = Array.isArray(p.youthClassification) ? p.youthClassification : [p.youthClassification];
+        return classifications.includes(cls);
+    }).length;
+  };
+
   const totalProfiles = profiles.length;
 
   const ageGroups = [
@@ -353,24 +369,24 @@ export default function PrintableReport({ profiles }) {
               {ageGroups.map(group => (
                 <tr key={group.label}>
                   <td className="border border-black px-2 py-1 text-left">{group.label}</td>
-                  <td className="border border-black">{countAttr('youthClassification', 'In School Youth', group.min, group.max)}</td>
-                  <td className="border border-black">{countAttr('youthClassification', 'Out of School Youth', group.min, group.max)}</td>
-                  <td className="border border-black">{countAttr('youthClassification', 'Working Youth', group.min, group.max)}</td>
-                  <td className="border border-black">{countAttr('youthClassification', 'Youth with Specific Needs', group.min, group.max)}</td>
-                  <td className="border border-black">{countAttr('youthClassification', 'Person with Disability', group.min, group.max)}</td>
-                  <td className="border border-black">{countAttr('youthClassification', 'Children in Conflict with Law', group.min, group.max)}</td>
-                  <td className="border border-black">{countAttr('youthClassification', 'Indigenous People', group.min, group.max)}</td>
+                  <td className="border border-black">{countClassification('In School Youth', group.min, group.max)}</td>
+                  <td className="border border-black">{countClassification('Out of School Youth', group.min, group.max)}</td>
+                  <td className="border border-black">{countClassification('Working Youth', group.min, group.max)}</td>
+                  <td className="border border-black">{countClassification('Youth with Specific Needs', group.min, group.max)}</td>
+                  <td className="border border-black">{countClassification('Person with Disability', group.min, group.max)}</td>
+                  <td className="border border-black">{countClassification('Children in Conflict with Law', group.min, group.max)}</td>
+                  <td className="border border-black">{countClassification('Indigenous People', group.min, group.max)}</td>
                 </tr>
               ))}
               <tr className="bg-gray-200 print:bg-gray-200 font-bold">
                 <td className="border border-black px-2 py-1 text-left">TOTAL</td>
-                <td className="border border-black">{profiles.filter(p => p.youthClassification.includes('In School Youth')).length}</td>
-                <td className="border border-black">{profiles.filter(p => p.youthClassification.includes('Out of School Youth')).length}</td>
-                <td className="border border-black">{profiles.filter(p => p.youthClassification.includes('Working Youth')).length}</td>
-                <td className="border border-black">{profiles.filter(p => p.youthClassification.includes('Youth with Specific Needs')).length}</td>
-                <td className="border border-black">{profiles.filter(p => p.youthClassification.includes('Person with Disability')).length}</td>
-                <td className="border border-black">{profiles.filter(p => p.youthClassification.includes('Children in Conflict with Law')).length}</td>
-                <td className="border border-black">{profiles.filter(p => p.youthClassification.includes('Indigenous People')).length}</td>
+                <td className="border border-black">{countClassificationTotal('In School Youth')}</td>
+                <td className="border border-black">{countClassificationTotal('Out of School Youth')}</td>
+                <td className="border border-black">{countClassificationTotal('Working Youth')}</td>
+                <td className="border border-black">{countClassificationTotal('Youth with Specific Needs')}</td>
+                <td className="border border-black">{countClassificationTotal('Person with Disability')}</td>
+                <td className="border border-black">{countClassificationTotal('Children in Conflict with Law')}</td>
+                <td className="border border-black">{countClassificationTotal('Indigenous People')}</td>
               </tr>
             </tbody>
           </table>
@@ -451,7 +467,7 @@ export default function PrintableReport({ profiles }) {
                  </tr>
                </thead>
                <tbody>
-                  {ageGroups.slice(1).map(group => (
+                  {ageGroups.slice(1).map(group => ( // Skip 15-17 for national voters usually
                     <tr key={group.label}>
                       <td className="border border-black px-2 py-1 text-left">{group.label}</td>
                       <td className="border border-black">{countAttr('isNationalVoter', true, group.min, group.max)}</td>

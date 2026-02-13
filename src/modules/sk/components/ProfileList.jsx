@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { ProfileService } from "../services/ProfileService";
 
-export default function ProfileList({ profiles, onSearch }) {
+export default function ProfileList({ profiles, onSearch, onDelete }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
@@ -15,7 +15,7 @@ export default function ProfileList({ profiles, onSearch }) {
   // --- FILTERING ---
   const filteredProfiles = profiles.filter((profile) => {
     if (!profile) return false;
-    const searchString = `${profile.first_name || ""} ${profile.last_name || ""} ${profile.skmt_no || ""}`;
+    const searchString = `${profile.firstName || ""} ${profile.lastName || ""} ${profile.skmtNo || ""}`;
     return searchString.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -32,8 +32,12 @@ export default function ProfileList({ profiles, onSearch }) {
     
     setIsDeleting(true);
     try {
-      await ProfileService.delete(id);
-      if (onSearch) onSearch(); // Refresh the list
+      if(onDelete) {
+         await onDelete(id);
+      } else {
+         await ProfileService.delete(id);
+         if (onSearch) onSearch(); // Refresh the list
+      }
     } catch (error) {
       console.error("Delete error:", error);
       alert("Failed to delete profile. Please try again.");
@@ -87,12 +91,12 @@ export default function ProfileList({ profiles, onSearch }) {
               paginatedProfiles.map((profile) => (
                 <tr key={profile.id} className="hover:bg-[#E7F0FA]/50 dark:hover:bg-gray-700/30 transition-colors group">
                   <td className="px-6 py-4 text-sm font-bold text-[#2E5E99] dark:text-blue-400 font-mono">
-                    {profile.skmt_no || "---"}
+                    {profile.skmtNo || "---"}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-[#0D2440] dark:text-white">
-                        {profile.last_name}, {profile.first_name}
+                        {profile.lastName}, {profile.firstName}
                       </span>
                       <span className="text-xs text-[#7BA4D0] dark:text-gray-500">{profile.email || "No email"}</span>
                     </div>
@@ -106,12 +110,15 @@ export default function ProfileList({ profiles, onSearch }) {
                     </span>
                   </td>
                   <td className="px-6 py-4">
+                     {/* Updated logic for array-based youthClassification */}
                     <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase border ${
-                      profile.youth_classification?.includes('In School') 
+                      (Array.isArray(profile.youthClassification) ? profile.youthClassification : [profile.youthClassification]).includes('In School Youth')
                         ? 'bg-green-50 text-green-600 border-green-100' 
                         : 'bg-orange-50 text-orange-600 border-orange-100'
                     }`}>
-                      {profile.youth_classification || "Unclassified"}
+                      {Array.isArray(profile.youthClassification)
+                         ? (profile.youthClassification[0] || "Unclassified") + (profile.youthClassification.length > 1 ? ` +${profile.youthClassification.length - 1}` : "")
+                         : (profile.youthClassification || "Unclassified")}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">

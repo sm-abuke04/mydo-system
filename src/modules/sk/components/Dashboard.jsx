@@ -5,7 +5,7 @@ import {
   ArrowLeft, Upload, Activity, Database, Clock, CheckCircle2, AlertCircle,
   FileBox, Eye, Loader2
 } from "lucide-react";
-import { SKReportService } from "../services/SKReportService"; // Import new service
+// import { SKReportService } from "../services/SKReportService"; // Placeholder if service exists
 
 export default function Dashboard({ profiles, setView }) {
   const [showReports, setShowReports] = useState(false);
@@ -18,8 +18,9 @@ export default function Dashboard({ profiles, setView }) {
       const loadReports = async () => {
         setIsLoadingReports(true);
         try {
-          const data = await SKReportService.getReports();
-          setReports(data || []);
+          // const data = await SKReportService.getReports();
+          // setReports(data || []);
+          setReports([]); // Mock empty for now
         } catch (error) {
           console.error("Failed to load reports");
         } finally {
@@ -55,14 +56,20 @@ export default function Dashboard({ profiles, setView }) {
     },
     {
       label: "In School",
-      value: profiles.filter((p) => (p.youthClassification || "").includes("In School")).length,
+      value: profiles.filter((p) => {
+        const val = p.youthClassification || [];
+        return Array.isArray(val) ? val.includes("In School Youth") : val === "In School Youth";
+      }).length,
       icon: GraduationCap,
       iconColor: "text-[#0D2440] dark:text-gray-300",
       bg: "bg-[#E7F0FA] dark:bg-gray-700/50",
     },
     {
       label: "Out of School",
-      value: profiles.filter((p) => (p.youthClassification || "").includes("Out of School")).length,
+      value: profiles.filter((p) => {
+        const val = p.youthClassification || [];
+        return Array.isArray(val) ? val.includes("Out of School Youth") : val === "Out of School Youth";
+      }).length,
       icon: GraduationCap,
       iconColor: "text-orange-500",
       bg: "bg-orange-50 dark:bg-orange-900/20",
@@ -225,7 +232,7 @@ export default function Dashboard({ profiles, setView }) {
                                 to={`/sk/edit/${profile.id}`}
                                 className="text-[#2E5E99] dark:text-blue-400 font-bold hover:underline ml-1"
                               >
-                                {profile.first_name || profile.firstName} {profile.last_name || profile.lastName}
+                                {profile.firstName} {profile.lastName}
                               </Link>
                             </p>
                             <p className="text-xs text-[#7BA4D0] dark:text-gray-500 font-semibold">
@@ -233,7 +240,7 @@ export default function Dashboard({ profiles, setView }) {
                             </p>
                           </div>
                           <div className="text-xs font-mono text-[#7BA4D0] dark:text-gray-400 bg-[#E7F0FA] dark:bg-gray-800 px-2 py-1 rounded">
-                            {new Date(profile.created_at || Date.now()).toLocaleDateString()}
+                            {new Date(profile.createdAt || Date.now()).toLocaleDateString()}
                           </div>
                         </div>
                       </div>

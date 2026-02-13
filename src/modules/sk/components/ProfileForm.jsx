@@ -2,24 +2,20 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Save, X, Loader2 } from "lucide-react";
 import { ProfileService } from "../services/ProfileService";
-
-// Helper for default form state
-const INITIAL_STATE = {
-  first_name: "", last_name: "", middle_name: "", suffix: "",
-  skmt_no: "", email: "", contact_number: "",
-  age: "", sex: "Male", birthdate: "", civil_status: "Single",
-  barangay: "", purok: "", 
-  youth_classification: "In School Youth",
-  work_status: "Unemployed",
-  is_voter: false,
-  is_sk_voter: false
-};
+import {
+  CIVIL_STATUS_OPTIONS,
+  YOUTH_CLASSIFICATION_OPTIONS,
+  YOUTH_AGE_GROUP_OPTIONS,
+  WORK_STATUS_OPTIONS,
+  EDUCATIONAL_BACKGROUND_OPTIONS,
+  INITIAL_FORM_STATE
+} from "../../sk-system/data/Form_Constants";
 
 export default function ProfileForm() {
   const { id } = useParams(); // Check if we are in Edit Mode
   const navigate = useNavigate();
   
-  const [formData, setFormData] = useState(INITIAL_STATE);
+  const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -30,7 +26,10 @@ export default function ProfileForm() {
         setIsLoading(true);
         try {
           const data = await ProfileService.getById(id);
-          if (data) setFormData(data);
+          if (data) {
+            // Data from Service is already mapped to camelCase by ProfileService
+            setFormData(data);
+          }
         } catch (error) {
           alert("Failed to load profile data.");
           navigate("/sk/list");
@@ -48,6 +47,17 @@ export default function ProfileForm() {
       ...prev,
       [name]: type === "checkbox" ? checked : value
     }));
+  };
+
+  const handleYouthClassificationChange = (option) => {
+    setFormData(prev => {
+      const current = prev.youthClassification || [];
+      if (current.includes(option)) {
+        return { ...prev, youthClassification: current.filter(item => item !== option) };
+      } else {
+        return { ...prev, youthClassification: [...current, option] };
+      }
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -82,7 +92,7 @@ export default function ProfileForm() {
             {id ? "Edit Youth Profile" : "Registration Form"}
           </h2>
           <p className="text-[#7BA4D0] dark:text-gray-400 text-sm">
-            Please fill in the information accurately.
+            Please fill in the information accurately based on the KK Profile Form.
           </p>
         </div>
         <button onClick={() => navigate("/sk/list")} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
@@ -93,82 +103,166 @@ export default function ProfileForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
         
         {/* SECTION 1: PERSONAL INFO */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">First Name</label>
-             <input required name="first_name" value={formData.first_name} onChange={handleChange} className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
-           </div>
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">Middle Name</label>
-             <input name="middle_name" value={formData.middle_name} onChange={handleChange} className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
-           </div>
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">Last Name</label>
-             <input required name="last_name" value={formData.last_name} onChange={handleChange} className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
-           </div>
+        <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
+          <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">I. Personal Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#7BA4D0] uppercase">First Name</label>
+              <input required name="firstName" value={formData.firstName} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#7BA4D0] uppercase">Middle Name</label>
+              <input name="middleName" value={formData.middleName} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#7BA4D0] uppercase">Last Name</label>
+              <input required name="lastName" value={formData.lastName} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#7BA4D0] uppercase">Suffix</label>
+              <input name="suffix" value={formData.suffix} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" placeholder="e.g. Jr, III" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mt-5">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#7BA4D0] uppercase">Sex</label>
+              <select name="sex" value={formData.sex} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
+                 <option value="">Select</option>
+                 <option value="Male">Male</option>
+                 <option value="Female">Female</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#7BA4D0] uppercase">Age</label>
+              <input type="number" name="age" value={formData.age} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#7BA4D0] uppercase">Birthday</label>
+              <input type="date" name="birthday" value={formData.birthday} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#7BA4D0] uppercase">Civil Status</label>
+              <select name="civilStatus" value={formData.civilStatus} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
+                 <option value="">Select Status</option>
+                 {CIVIL_STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+            <div className="space-y-1">
+                <label className="text-xs font-bold text-[#7BA4D0] uppercase">Email Address</label>
+                <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
+            </div>
+            <div className="space-y-1">
+                <label className="text-xs font-bold text-[#7BA4D0] uppercase">Contact Number</label>
+                <input type="tel" name="contact" value={formData.contact} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
+            </div>
+          </div>
         </div>
 
         {/* SECTION 2: DEMOGRAPHICS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">Sex</label>
-             <select name="sex" value={formData.sex} onChange={handleChange} className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-             </select>
+        <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
+           <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">II. Demographic Information</h3>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+             <div className="space-y-1">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Youth Age Group</label>
+               <select name="youthAgeGroup" value={formData.youthAgeGroup} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
+                  <option value="">Select Age Group</option>
+                  {YOUTH_AGE_GROUP_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+               </select>
+             </div>
+             <div className="space-y-1">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Educational Background</label>
+               <select name="educationalBackground" value={formData.educationalBackground} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
+                  <option value="">Select Level</option>
+                  {EDUCATIONAL_BACKGROUND_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+               </select>
+             </div>
            </div>
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">Age</label>
-             <input type="number" name="age" value={formData.age} onChange={handleChange} className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
+
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+             <div className="space-y-2">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase block">Youth Classification (Select all that apply)</label>
+               <div className="grid grid-cols-1 gap-2 bg-white dark:bg-gray-800 p-4 rounded-lg border border-[#E7F0FA] dark:border-gray-600">
+                  {YOUTH_CLASSIFICATION_OPTIONS.map(option => (
+                    <label key={option} className="flex items-center gap-3 cursor-pointer p-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
+                        <input
+                            type="checkbox"
+                            checked={formData.youthClassification?.includes(option)}
+                            onChange={() => handleYouthClassificationChange(option)}
+                            className="w-4 h-4 text-[#2E5E99] rounded border-gray-300 focus:ring-[#2E5E99]"
+                        />
+                        <span className="text-sm text-[#0D2440] dark:text-gray-200 font-medium">{option}</span>
+                    </label>
+                  ))}
+               </div>
+             </div>
+
+             <div className="space-y-1">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Work Status</label>
+               <select name="workStatus" value={formData.workStatus} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
+                  <option value="">Select Status</option>
+                  {WORK_STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+               </select>
+             </div>
            </div>
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">Birthdate</label>
-             <input type="date" name="birthdate" value={formData.birthdate} onChange={handleChange} className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
-           </div>
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">Civil Status</label>
-             <select name="civil_status" value={formData.civil_status} onChange={handleChange} className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
-                <option value="Single">Single</option>
-                <option value="Married">Married</option>
-                <option value="Widowed">Widowed</option>
-             </select>
+
+           <div className="flex gap-8 mt-6">
+                <label className="flex items-center gap-3 cursor-pointer p-3 bg-white dark:bg-gray-800 rounded-xl border border-[#E7F0FA] dark:border-gray-600 w-full hover:border-[#2E5E99] transition-all">
+                    <input
+                        type="checkbox"
+                        name="isSkVoter"
+                        checked={formData.isSkVoter}
+                        onChange={handleChange}
+                        className="w-5 h-5 text-[#2E5E99] rounded border-gray-300 focus:ring-[#2E5E99]"
+                    />
+                    <div className="flex flex-col">
+                        <span className="text-sm font-bold text-[#0D2440] dark:text-white">Registered SK Voter?</span>
+                        <span className="text-xs text-[#7BA4D0]">Check if yes</span>
+                    </div>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer p-3 bg-white dark:bg-gray-800 rounded-xl border border-[#E7F0FA] dark:border-gray-600 w-full hover:border-[#2E5E99] transition-all">
+                    <input
+                        type="checkbox"
+                        name="isNationalVoter"
+                        checked={formData.isNationalVoter}
+                        onChange={handleChange}
+                        className="w-5 h-5 text-[#2E5E99] rounded border-gray-300 focus:ring-[#2E5E99]"
+                    />
+                    <div className="flex flex-col">
+                        <span className="text-sm font-bold text-[#0D2440] dark:text-white">Registered National Voter?</span>
+                        <span className="text-xs text-[#7BA4D0]">Check if yes</span>
+                    </div>
+                </label>
            </div>
         </div>
 
-        {/* SECTION 3: CLASSIFICATION */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">Youth Classification</label>
-             <select name="youth_classification" value={formData.youth_classification} onChange={handleChange} className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
-                <option value="In School Youth">In School Youth</option>
-                <option value="Out of School Youth">Out of School Youth</option>
-                <option value="Working Youth">Working Youth</option>
-                <option value="Youth with Special Needs">Youth with Special Needs</option>
-             </select>
-           </div>
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">Work Status</label>
-             <select name="work_status" value={formData.work_status} onChange={handleChange} className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
-                <option value="Unemployed">Unemployed</option>
-                <option value="Employed">Employed</option>
-                <option value="Self-Employed">Self-Employed</option>
-             </select>
-           </div>
-        </div>
+        {/* SECTION 3: ADDRESS */}
+        <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
+           <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">III. Address Information</h3>
 
-        {/* SECTION 4: LOCATION & ID */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">SKMT Number</label>
-             <input required name="skmt_no" value={formData.skmt_no} onChange={handleChange} placeholder="YYYY-NNN" className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
-           </div>
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">Barangay</label>
-             <input required name="barangay" value={formData.barangay} onChange={handleChange} className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
-           </div>
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">Purok</label>
-             <input name="purok" value={formData.purok} onChange={handleChange} className="w-full p-3 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+             <div className="space-y-1">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Barangay</label>
+               <input required name="barangay" value={formData.barangay} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
+             </div>
+             <div className="space-y-1">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Purok / Zone</label>
+               <input name="purokZone" value={formData.purokZone} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
+             </div>
+             {/* Read Only / Pre-filled */}
+             <div className="space-y-1 opacity-60">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">City / Municipality</label>
+               <input disabled value={formData.cityMunicipality} className="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-transparent rounded-lg text-sm font-bold dark:text-gray-300 cursor-not-allowed" />
+             </div>
+             <div className="space-y-1 opacity-60">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Province</label>
+               <input disabled value={formData.province} className="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-transparent rounded-lg text-sm font-bold dark:text-gray-300 cursor-not-allowed" />
+             </div>
            </div>
         </div>
 
