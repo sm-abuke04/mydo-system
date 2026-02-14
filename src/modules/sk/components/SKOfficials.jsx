@@ -9,14 +9,14 @@ export default function SKOfficials() {
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   
-  // Updated Form State to match requirements
-  // Inputs: SKMT No.(auto generated), Name, Position, Birthdate, Age, Status
+  // Form State: SKMT No., Name, Position, Birthdate, Age, Gender, Status
   const [form, setForm] = useState({
-    skmtNo: "", // Will be auto-generated in UI or handled by DB
+    skmtNo: "",
     name: "",
     position: "SK Kagawad",
     birthdate: "",
     age: "",
+    gender: "Male",
     status: "Active"
   });
 
@@ -53,7 +53,6 @@ export default function SKOfficials() {
   // --- AUTO-GENERATE SKMT NO (Mock) ---
   useEffect(() => {
     if (!editingId && !form.skmtNo) {
-        // Simple mock generator: SK-YYYY-RANDOM
         const mockSKMT = `SK-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
         setForm(prev => ({ ...prev, skmtNo: mockSKMT }));
     }
@@ -74,6 +73,7 @@ export default function SKOfficials() {
         position: "SK Kagawad",
         birthdate: "",
         age: "",
+        gender: "Male",
         status: "Active"
       });
       setEditingId(null);
@@ -90,6 +90,7 @@ export default function SKOfficials() {
         position: official.position,
         birthdate: official.birthdate || "",
         age: official.age || "",
+        gender: official.gender || "Male",
         status: official.status || "Active"
     });
     setEditingId(official.id);
@@ -111,7 +112,6 @@ export default function SKOfficials() {
             ...prev,
             name: `${user.first_name} ${user.last_name}`,
             position: user.role === 'SK_CHAIR' ? 'SK Chairperson' : 'SK Official',
-            // Ideally we'd have birthdate in user profile too, but if not, leave blank
         }));
     }
   };
@@ -153,9 +153,10 @@ export default function SKOfficials() {
                             {off.status || 'Active'}
                         </span>
                      </div>
-                     <div className="text-xs text-gray-400 mt-1 flex items-center gap-3">
+                     <div className="text-xs text-gray-400 mt-1 flex items-center gap-3 flex-wrap">
                         <span className="flex items-center gap-1"><Hash size={10}/> {off.skmtNo || off.skmt_no || '---'}</span>
-                        <span className="flex items-center gap-1"><Calendar size={10}/> {off.age ? `${off.age} yrs old` : 'N/A'}</span>
+                        <span className="flex items-center gap-1"><Calendar size={10}/> {off.age ? `${off.age} yrs` : 'N/A'}</span>
+                        <span className="flex items-center gap-1">• {off.gender || 'N/A'}</span>
                      </div>
                    </div>
                  </div>
@@ -245,13 +246,15 @@ export default function SKOfficials() {
 
           <div className="grid grid-cols-2 gap-4">
              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">Birthdate</label>
-                <input
-                    type="date"
-                    value={form.birthdate}
-                    onChange={(e) => setForm({...form, birthdate: e.target.value})}
+                <label className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">Gender</label>
+                <select
+                    value={form.gender}
+                    onChange={(e) => setForm({...form, gender: e.target.value})}
                     className="w-full p-2 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-bold dark:text-white outline-none"
-                />
+                >
+                    <option>Male</option>
+                    <option>Female</option>
+                </select>
              </div>
              <div className="space-y-1">
                 <label className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">Age</label>
@@ -264,13 +267,23 @@ export default function SKOfficials() {
                 />
              </div>
           </div>
+
+          <div className="space-y-1">
+             <label className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">Birthdate</label>
+             <input
+                type="date"
+                value={form.birthdate}
+                onChange={(e) => setForm({...form, birthdate: e.target.value})}
+                className="w-full p-2 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-bold dark:text-white outline-none"
+             />
+          </div>
           
           <button onClick={handleSave} className="w-full py-3 mt-2 bg-[#2E5E99] hover:bg-[#0D2440] text-white rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all flex justify-center items-center gap-2 active:scale-95">
              <Save size={18}/> {editingId ? "Save Changes" : "Add Official"}
           </button>
           
           {editingId && (
-            <button onClick={() => { setEditingId(null); setForm({skmtNo:"", name:"", position:"SK Kagawad", birthdate:"", age:"", status:"Active"}); }} className="w-full py-2 text-[#7BA4D0] text-xs font-bold hover:text-red-500 transition-colors">
+            <button onClick={() => { setEditingId(null); setForm({skmtNo:"", name:"", position:"SK Kagawad", birthdate:"", age:"", gender:"Male", status:"Active"}); }} className="w-full py-2 text-[#7BA4D0] text-xs font-bold hover:text-red-500 transition-colors">
               Cancel Edit
             </button>
           )}
