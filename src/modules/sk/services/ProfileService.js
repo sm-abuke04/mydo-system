@@ -33,7 +33,7 @@ const mapToCamelCase = (dbData) => {
     educationalBackground: dbData.educational_background || '',
     isSkVoter: dbData.is_sk_voter || false,
     isNationalVoter: dbData.is_national_voter || false,
-    skmtNo: dbData.skmt_no || '' // Ensure SKMT is mapped if it exists in DB schema (though removed from form UI, might be auto-generated or hidden)
+    skmtNo: dbData.skmt_no || ''
   };
 };
 
@@ -61,7 +61,7 @@ const mapToSnakeCase = (formData) => {
     educational_background: formData.educationalBackground,
     is_sk_voter: formData.isSkVoter,
     is_national_voter: formData.isNationalVoter,
-    // skmt_no: formData.skmtNo // Include if needed
+    skmt_no: formData.skmtNo // ENABLED: This ensures SKMT No is saved to DB
   };
 };
 
