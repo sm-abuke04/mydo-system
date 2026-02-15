@@ -4,12 +4,11 @@ import { SKOfficialService } from "../services/SKOfficialService";
 import { useAuth } from "../../../context/AuthContext";
 
 export default function SKOfficials() {
-  const { user } = useAuth(); // Get current logged in user
+  const { user } = useAuth();
   const [officials, setOfficials] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   
-  // Form State: SKMT No., Name, Position, Birthdate, Age, Gender, Status
   const [form, setForm] = useState({
     skmtNo: "",
     name: "",
@@ -36,7 +35,7 @@ export default function SKOfficials() {
     fetchOfficials();
   }, []);
 
-  // --- AGE CALCULATION EFFECT ---
+  // --- AUTO-CALC AGE ---
   useEffect(() => {
     if (form.birthdate) {
       const birthDate = new Date(form.birthdate);
@@ -50,7 +49,7 @@ export default function SKOfficials() {
     }
   }, [form.birthdate]);
 
-  // --- AUTO-GENERATE SKMT NO (Mock) ---
+  // --- AUTO-GENERATE SKMT ---
   useEffect(() => {
     if (!editingId && !form.skmtNo) {
         const mockSKMT = `SK-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
@@ -66,7 +65,6 @@ export default function SKOfficials() {
       } else {
         await SKOfficialService.create(form);
       }
-      // Reset Form
       setForm({
         skmtNo: "",
         name: "",
@@ -117,9 +115,9 @@ export default function SKOfficials() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* LEFT: OFFICIALS LIST */}
-      <div className="lg:col-span-2 space-y-6">
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      {/* LEFT: OFFICIALS TABLE */}
+      <div className="xl:col-span-2 space-y-6">
         <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-[#0D2440] dark:text-white flex items-center gap-2">
             <Shield className="text-[#2E5E99]" /> Council Members
@@ -132,43 +130,61 @@ export default function SKOfficials() {
         {isLoading ? (
           <div className="p-10 flex justify-center"><Loader2 className="animate-spin text-blue-600"/></div>
         ) : (
-          <div className="grid gap-4">
-             {officials.map((off) => (
-               <div key={off.id} className="bg-white dark:bg-[#1e293b] p-5 rounded-xl shadow-sm border border-[#E7F0FA] dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center group gap-4 transition-all hover:shadow-md">
-                 <div className="flex items-center gap-4">
-                   <div className="w-14 h-14 rounded-full bg-linear-to-br from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center text-[#2E5E99] dark:text-blue-400 border-2 border-white dark:border-gray-500 shadow-sm">
-                     <User size={24} />
-                   </div>
-                   <div>
-                     <h3 className="font-bold text-[#0D2440] dark:text-white text-lg">{off.name}</h3>
-                     <div className="flex flex-wrap gap-2 text-xs mt-1">
-                        <span className="px-2 py-0.5 bg-[#E7F0FA] dark:bg-blue-900/30 text-[#2E5E99] dark:text-blue-300 rounded font-bold uppercase tracking-wide border border-blue-100 dark:border-blue-800">
-                            {off.position}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded font-bold uppercase tracking-wide border ${
-                            off.status === 'Active'
-                            ? 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-400'
-                            : 'bg-gray-50 text-gray-500 border-gray-200'
-                        }`}>
-                            {off.status || 'Active'}
-                        </span>
-                     </div>
-                     <div className="text-xs text-gray-400 mt-1 flex items-center gap-3 flex-wrap">
-                        <span className="flex items-center gap-1"><Hash size={10}/> {off.skmtNo || off.skmt_no || '---'}</span>
-                        <span className="flex items-center gap-1"><Calendar size={10}/> {off.age ? `${off.age} yrs` : 'N/A'}</span>
-                        <span className="flex items-center gap-1">• {off.gender || 'N/A'}</span>
-                     </div>
-                   </div>
-                 </div>
-                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity self-end sm:self-center">
-                    <button onClick={() => handleEdit(off)} className="p-2 text-[#2E5E99] hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-colors" title="Edit"><Edit2 size={18}/></button>
-                    <button onClick={() => handleDelete(off.id)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Remove"><Trash2 size={18}/></button>
-                 </div>
-               </div>
-             ))}
-             {officials.length === 0 && (
-                <div className="text-center p-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
-                    <p className="text-gray-400 italic mb-2">No officials added to the council yet.</p>
+          <div className="bg-white dark:bg-[#1e293b] rounded-xl shadow-sm border border-[#E7F0FA] dark:border-gray-700 overflow-hidden">
+             {officials.length > 0 ? (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700">
+                            <tr className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">
+                                <th className="py-4 px-4">SKMT No.</th>
+                                <th className="py-4 px-4">Name</th>
+                                <th className="py-4 px-4">Position</th>
+                                <th className="py-4 px-4">Info</th>
+                                <th className="py-4 px-4">Status</th>
+                                <th className="py-4 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
+                            {officials.map((off) => (
+                                <tr key={off.id} className="hover:bg-[#F8FAFC] dark:hover:bg-gray-700/30 transition-colors group">
+                                    <td className="py-3 px-4 text-xs font-mono font-bold text-gray-500 dark:text-gray-400">
+                                        {off.skmtNo || '---'}
+                                    </td>
+                                    <td className="py-3 px-4 text-sm font-bold text-[#0D2440] dark:text-white">
+                                        {off.name}
+                                    </td>
+                                    <td className="py-3 px-4 text-xs font-bold text-[#2E5E99] dark:text-blue-400 uppercase">
+                                        {off.position}
+                                    </td>
+                                    <td className="py-3 px-4 text-xs text-gray-500 dark:text-gray-400">
+                                        <div className="flex flex-col">
+                                            <span>{off.birthdate || 'No Bday'}</span>
+                                            <span>{off.age ? `${off.age} yrs` : ''} • {off.gender || ''}</span>
+                                        </div>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                                            off.status === 'Active'
+                                            ? 'text-green-600 bg-green-50 dark:bg-green-900/20'
+                                            : 'text-gray-500 bg-gray-50 dark:bg-gray-800'
+                                        }`}>
+                                            {off.status || 'Active'}
+                                        </span>
+                                    </td>
+                                    <td className="py-3 px-4 text-right">
+                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => handleEdit(off)} className="p-1.5 text-[#2E5E99] hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg" title="Edit"><Edit2 size={16}/></button>
+                                            <button onClick={() => handleDelete(off.id)} className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" title="Remove"><Trash2 size={16}/></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+             ) : (
+                <div className="text-center p-8">
+                    <p className="text-gray-400 italic mb-2">No officials added yet.</p>
                     <button onClick={handleAddMyself} className="text-sm font-bold text-[#2E5E99] hover:underline">
                         Add myself as an official
                     </button>
@@ -178,7 +194,7 @@ export default function SKOfficials() {
         )}
       </div>
 
-      {/* RIGHT: ADD/EDIT FORM */}
+      {/* RIGHT: FORM (Kept mostly same but sticky) */}
       <div className="bg-white dark:bg-[#1e293b] p-6 rounded-2xl shadow-lg border border-[#E7F0FA] dark:border-gray-700 h-fit sticky top-6">
         <h3 className="font-bold text-[#0D2440] dark:text-white mb-6 flex items-center gap-2 pb-4 border-b border-[#E7F0FA] dark:border-gray-700">
           {editingId ? <Edit2 size={18} className="text-[#2E5E99]"/> : <Plus size={18} className="text-[#2E5E99]"/>}
@@ -186,26 +202,17 @@ export default function SKOfficials() {
         </h3>
         
         <div className="space-y-4">
-
           <div className="grid grid-cols-2 gap-4">
              <div className="space-y-1">
                 <label className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">SKMT No.</label>
                 <div className="relative">
                     <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14}/>
-                    <input
-                    value={form.skmtNo}
-                    readOnly
-                    className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-700 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-mono text-gray-500 cursor-not-allowed"
-                    />
+                    <input value={form.skmtNo} readOnly className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-700 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-mono text-gray-500 cursor-not-allowed" />
                 </div>
              </div>
              <div className="space-y-1">
                 <label className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">Status</label>
-                <select
-                    value={form.status}
-                    onChange={(e) => setForm({...form, status: e.target.value})}
-                    className="w-full p-2 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-bold dark:text-white"
-                >
+                <select value={form.status} onChange={(e) => setForm({...form, status: e.target.value})} className="w-full p-2 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-bold dark:text-white">
                     <option>Active</option>
                     <option>Inactive</option>
                     <option>Resigned</option>
@@ -218,12 +225,7 @@ export default function SKOfficials() {
              <label className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">Full Name</label>
              <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
-                <input
-                value={form.name}
-                onChange={(e) => setForm({...form, name: e.target.value})}
-                className="w-full pl-9 pr-3 py-2.5 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white focus:ring-2 focus:ring-[#2E5E99] outline-none"
-                placeholder="Hon. Juan Dela Cruz"
-                />
+                <input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="w-full pl-9 pr-3 py-2.5 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white focus:ring-2 focus:ring-[#2E5E99] outline-none" placeholder="Hon. Juan Dela Cruz" />
              </div>
           </div>
 
@@ -231,11 +233,7 @@ export default function SKOfficials() {
              <label className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">Position</label>
              <div className="relative">
                 <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
-                <select
-                value={form.position}
-                onChange={(e) => setForm({...form, position: e.target.value})}
-                className="w-full pl-9 pr-3 py-2.5 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white outline-none"
-                >
+                <select value={form.position} onChange={(e) => setForm({...form, position: e.target.value})} className="w-full pl-9 pr-3 py-2.5 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white outline-none">
                 <option>SK Chairperson</option>
                 <option>SK Kagawad</option>
                 <option>SK Secretary</option>
@@ -247,35 +245,20 @@ export default function SKOfficials() {
           <div className="grid grid-cols-2 gap-4">
              <div className="space-y-1">
                 <label className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">Gender</label>
-                <select
-                    value={form.gender}
-                    onChange={(e) => setForm({...form, gender: e.target.value})}
-                    className="w-full p-2 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-bold dark:text-white outline-none"
-                >
+                <select value={form.gender} onChange={(e) => setForm({...form, gender: e.target.value})} className="w-full p-2 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-bold dark:text-white outline-none">
                     <option>Male</option>
                     <option>Female</option>
                 </select>
              </div>
              <div className="space-y-1">
                 <label className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">Age</label>
-                <input
-                    type="number"
-                    value={form.age}
-                    readOnly
-                    className="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-bold text-gray-500 cursor-not-allowed"
-                    placeholder="Auto"
-                />
+                <input type="number" value={form.age} readOnly className="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-bold text-gray-500 cursor-not-allowed" placeholder="Auto" />
              </div>
           </div>
 
           <div className="space-y-1">
              <label className="text-[10px] font-bold text-[#7BA4D0] uppercase tracking-wider">Birthdate</label>
-             <input
-                type="date"
-                value={form.birthdate}
-                onChange={(e) => setForm({...form, birthdate: e.target.value})}
-                className="w-full p-2 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-bold dark:text-white outline-none"
-             />
+             <input type="date" value={form.birthdate} onChange={(e) => setForm({...form, birthdate: e.target.value})} className="w-full p-2 bg-[#F8FAFC] dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-xs font-bold dark:text-white outline-none" />
           </div>
           
           <button onClick={handleSave} className="w-full py-3 mt-2 bg-[#2E5E99] hover:bg-[#0D2440] text-white rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all flex justify-center items-center gap-2 active:scale-95">
