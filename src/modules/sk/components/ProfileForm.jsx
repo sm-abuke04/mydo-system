@@ -158,14 +158,6 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
         <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
           <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">II. Personal Information</h3>
 
-          {/* SKMT NO - Column 1 */}
-          <div className="grid grid-cols-1 gap-5 mb-5">
-             <div className="space-y-1">
-               <label className="text-xs font-bold text-[#7BA4D0] uppercase">SKMT ID No.</label>
-               <input required name="skmtNo" value={formData.skmtNo} onChange={handleChange} placeholder="YYYY-NNN" className="w-full md:w-1/3 p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
-             </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             <div className="space-y-1">
               <label className="text-xs font-bold text-[#7BA4D0] uppercase">First Name</label>
