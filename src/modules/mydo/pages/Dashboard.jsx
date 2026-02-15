@@ -50,8 +50,49 @@ const Dashboard = () => {
     if (!confirm("Approve access for this user?")) return;
     setIsProcessing(userId);
     try {
-        const { error } = await supabase.from('users').update({ status: 'Active' }).eq('id', userId);
-        if (error) throw error;
+        // 1. Get User Details
+        const { data: userData, error: fetchError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        if (fetchError) throw fetchError;
+
+        // 2. Update Status to Active
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ status: 'Active' })
+            .eq('id', userId);
+
+        if (updateError) throw updateError;
+
+        // 3. AUTO-CREATE SK OFFICIAL RECORD (If SK Chair)
+        if (userData.role === 'SK_CHAIR') {
+            // Check if exists first to avoid duplicates
+            const { data: existing } = await supabase
+                .from('sk_officials')
+                .select('id')
+                .eq('barangay', userData.barangay)
+                .eq('position', 'SK Chairperson')
+                .single();
+
+            if (!existing) {
+                const { error: insertError } = await supabase
+                    .from('sk_officials')
+                    .insert([{
+                        name: `${userData.first_name} ${userData.last_name}`,
+                        position: 'SK Chairperson',
+                        barangay: userData.barangay,
+                        status: 'Active',
+                        skmt_no: `SK-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`, // Auto-gen
+                        gender: 'Male' // Default, editable later
+                    }]);
+
+                if (insertError) console.error("Failed to auto-create SK Official record:", insertError);
+            }
+        }
+
         // Remove from list
         setAccessRequests(prev => prev.filter(u => u.id !== userId));
         alert("User approved successfully.");
