@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Save, X, Loader2 } from "lucide-react";
+import { Save, X, Loader2, ArrowLeft } from "lucide-react"; // Added ArrowLeft
 import { ProfileService } from "../services/ProfileService";
 import {
   CIVIL_STATUS_OPTIONS,
@@ -11,9 +10,8 @@ import {
   INITIAL_FORM_STATE
 } from "../../sk-system/data/Form_Constants";
 
-export default function ProfileForm() {
-  const { id } = useParams(); // Check if we are in Edit Mode
-  const navigate = useNavigate();
+export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
+  // Use props 'id' instead of useParams
   
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,19 +25,20 @@ export default function ProfileForm() {
         try {
           const data = await ProfileService.getById(id);
           if (data) {
-            // Data from Service is already mapped to camelCase by ProfileService
             setFormData(data);
           }
         } catch (error) {
           alert("Failed to load profile data.");
-          navigate("/sk/list");
+          if (onCancel) onCancel();
         } finally {
           setIsLoading(false);
         }
       };
       fetchProfile();
+    } else {
+        setFormData(INITIAL_FORM_STATE); // Reset form if adding
     }
-  }, [id, navigate]);
+  }, [id]); // Depend on prop 'id'
 
   // AGE CALCULATION EFFECT
   useEffect(() => {
@@ -96,7 +95,7 @@ export default function ProfileForm() {
         await ProfileService.create(formData);
         alert("New Profile Created!");
       }
-      navigate("/sk/list");
+      if (onSaveSuccess) onSaveSuccess();
     } catch (error) {
       console.error(error);
       alert("An error occurred while saving.");
@@ -110,25 +109,32 @@ export default function ProfileForm() {
   if (isLoading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-blue-600"/></div>;
 
   return (
-    <div className="bg-white dark:bg-[#1e293b] rounded-xl shadow-lg border border-[#E7F0FA] dark:border-gray-700 p-8 max-w-4xl mx-auto">
+    <div className="bg-white dark:bg-[#1e293b] rounded-xl shadow-lg border border-[#E7F0FA] dark:border-gray-700 p-8 max-w-4xl mx-auto animate-in slide-in-from-bottom-4 duration-300">
       
       {/* HEADER */}
       <div className="flex justify-between items-center mb-8 pb-4 border-b border-[#E7F0FA] dark:border-gray-700">
         <div>
-          <h2 className="text-2xl font-bold text-[#0D2440] dark:text-white">
+          <h2 className="text-2xl font-bold text-[#0D2440] dark:text-white flex items-center gap-3">
+            {onCancel && (
+                <button onClick={onCancel} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors" title="Back to List">
+                    <ArrowLeft size={24} className="text-[#2E5E99]" />
+                </button>
+            )}
             {id ? "Edit Youth Profile" : "Registration Form"}
           </h2>
-          <p className="text-[#7BA4D0] dark:text-gray-400 text-sm">
+          <p className="text-[#7BA4D0] dark:text-gray-400 text-sm pl-10">
             Please fill in the information accurately based on the KK Profile Form.
           </p>
         </div>
-        <button onClick={() => navigate("/sk/list")} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-          <X className="w-6 h-6 text-gray-400" />
-        </button>
+        {onCancel && (
+            <button onClick={onCancel} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+            <X className="w-6 h-6 text-gray-400" />
+            </button>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        
+        {/* ... (Keep existing form fields exactly as they were) ... */}
         {/* SECTION 1: PERSONAL INFO */}
         <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
           <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">I. Personal Information</h3>
@@ -310,9 +316,17 @@ export default function ProfileForm() {
            </div>
         </div>
 
+        {/* SECTION 4: SKMT */}
+        <div className="grid grid-cols-1 gap-5">
+           <div className="space-y-1">
+             <label className="text-xs font-bold text-[#7BA4D0] uppercase">SKMT Number</label>
+             <input required name="skmtNo" value={formData.skmtNo} onChange={handleChange} placeholder="YYYY-NNN" className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
+           </div>
+        </div>
+
         {/* FOOTER ACTIONS */}
         <div className="pt-6 flex justify-end gap-3">
-           <button type="button" onClick={() => navigate("/sk/list")} className="px-6 py-3 rounded-xl font-bold text-[#7BA4D0] hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+           <button type="button" onClick={onCancel} className="px-6 py-3 rounded-xl font-bold text-[#7BA4D0] hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
              Cancel
            </button>
            <button type="submit" disabled={isSaving} className="px-8 py-3 bg-[#2E5E99] hover:bg-[#0D2440] text-white rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all flex items-center gap-2">

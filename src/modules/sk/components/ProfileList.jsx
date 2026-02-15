@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Search, Edit, Trash2, Eye, MoreVertical,
-  ChevronLeft, ChevronRight, Filter, Briefcase, GraduationCap
+  ChevronLeft, ChevronRight, Filter, Briefcase, GraduationCap, Loader2
 } from "lucide-react";
 import { ProfileService } from "../services/ProfileService";
 
-export default function ProfileList({ profiles, onSearch, onDelete }) {
+export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLoading }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
@@ -49,12 +49,13 @@ export default function ProfileList({ profiles, onSearch, onDelete }) {
   return (
     <div className="bg-white dark:bg-[#1e293b] rounded-xl shadow-lg border border-[#E7F0FA] dark:border-gray-700 flex flex-col h-full overflow-hidden transition-colors">
       
-      {/* HEADER & TOOLBAR */}
-      <div className="p-5 border-b border-[#E7F0FA] dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-xl font-bold text-[#0D2440] dark:text-white flex items-center gap-2">
-          <span className="bg-[#2E5E99] text-white text-xs px-2 py-1 rounded-md">{profiles.length}</span>
-          Youth Profiles
-        </h2>
+      {/* TOOLBAR (Header removed as Parent handles it, kept Search/Filter) */}
+      <div className="p-5 border-b border-[#E7F0FA] dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50 dark:bg-gray-800/50">
+        <div className="flex items-center gap-2">
+           <span className="bg-[#2E5E99] text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">
+             {profiles.length} Records
+           </span>
+        </div>
 
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -64,19 +65,25 @@ export default function ProfileList({ profiles, onSearch, onDelete }) {
               placeholder="Search name or SKMT..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-[#E7F0FA] dark:bg-gray-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-[#2E5E99] dark:text-white w-64"
+              className="pl-9 pr-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-[#2E5E99] dark:text-white w-64 shadow-sm"
             />
           </div>
-          <button className="p-2 text-[#7BA4D0] hover:bg-[#E7F0FA] dark:hover:bg-gray-700 rounded-lg transition-colors">
-            <Filter className="w-5 h-5" />
+          <button className="p-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 text-[#7BA4D0] hover:text-[#2E5E99] hover:border-[#2E5E99] rounded-xl transition-all shadow-sm">
+            <Filter className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {/* TABLE */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto relative">
+        {isLoading && (
+            <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 z-10 flex items-center justify-center">
+                <Loader2 className="animate-spin text-blue-600" size={32} />
+            </div>
+        )}
+
         <table className="w-full text-left border-collapse">
-          <thead className="bg-[#E7F0FA]/50 dark:bg-gray-800/50 sticky top-0 z-10">
+          <thead className="bg-[#E7F0FA]/50 dark:bg-gray-800/50 sticky top-0 z-10 backdrop-blur-sm">
             <tr>
               <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">SKMT ID</th>
               <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">Profile Details</th>
@@ -152,9 +159,12 @@ export default function ProfileList({ profiles, onSearch, onDelete }) {
                   </td>
                   <td className="px-6 py-4 text-right align-top pt-5">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Link to={`/sk/edit/${profile.id}`} className="p-2 text-[#2E5E99] bg-blue-50 hover:bg-[#2E5E99] hover:text-white rounded-lg transition-colors">
+                      <button
+                        onClick={() => onEdit && onEdit(profile.id)} // Use parent handler
+                        className="p-2 text-[#2E5E99] bg-blue-50 hover:bg-[#2E5E99] hover:text-white rounded-lg transition-colors"
+                      >
                         <Edit className="w-4 h-4" />
-                      </Link>
+                      </button>
                       <button 
                         onClick={() => handleDelete(profile.id)}
                         disabled={isDeleting}
@@ -169,7 +179,7 @@ export default function ProfileList({ profiles, onSearch, onDelete }) {
             ) : (
               <tr>
                 <td colSpan="6" className="px-6 py-12 text-center text-[#7BA4D0] dark:text-gray-500">
-                  No profiles found matching "{searchTerm}"
+                  {searchTerm ? `No profiles found matching "${searchTerm}"` : "No profiles added yet."}
                 </td>
               </tr>
             )}

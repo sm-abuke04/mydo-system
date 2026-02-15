@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, UserPlus, FileText, Printer, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Printer, Shield } from "lucide-react"; // Changed icon
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
   // Check if we are on mobile (simplistic check)
@@ -55,23 +55,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, profileCount }) {
           </span>
         </NavLink>
 
-        <NavLink to="/sk/add" onClick={handleLinkClick} className={getLinkClass}>
-          <UserPlus className="w-5 h-5 shrink-0" />
-          <span
-            className={`transition-opacity duration-200 whitespace-nowrap ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
-          >
-            New Profile
-          </span>
-        </NavLink>
-
-        <NavLink to="/sk/list" onClick={handleLinkClick} className={getLinkClass}>
-          <FileText className="w-5 h-5 shrink-0" />
+        {/* COMBINED REGISTRY LINK */}
+        <NavLink to="/sk/registry" onClick={handleLinkClick} className={getLinkClass}>
+          <Users className="w-5 h-5 shrink-0" />
           <span
             className={`transition-opacity duration-200 whitespace-nowrap flex-1 text-left ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}
           >
-            View Profiles
+            Youth Registry
           </span>
-          {/* Badge shows next to text when open, or as a dot/number overlay when closed if needed */}
           {sidebarOpen && profileCount > 0 && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-[#2E5E99] text-white font-medium dark:bg-blue-500">
               {profileCount}

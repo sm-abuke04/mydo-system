@@ -5,16 +5,14 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import Dashboard from "./components/Dashboard";
-import ProfileForm from "./components/ProfileForm";
-import ProfileList from "./components/ProfileList";
+import YouthRegistry from "./components/YouthRegistry"; // NEW COMPONENT
 import PrintableReport from "./components/PrintableReport";
 import MyProfile from "./components/MyProfile";
 import SystemSettings from "./components/SystemSettings";
-import SKOfficials from "./components/SKOfficials"; // NEW OFFICIALS COMPONENT
+import SKOfficials from "./components/SKOfficials";
 
-// SERVICE IMPORT (The new data layer)
+// SERVICE IMPORT
 import { ProfileService } from "./services/ProfileService";
-import { SKOfficialService } from "./services/SKOfficialService";
 
 export default function SKYouthProfilingSystem() {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -34,14 +32,13 @@ export default function SKYouthProfilingSystem() {
     const path = location.pathname;
     if (path.includes("/dashboard")) return "dashboard";
     if (path.includes("/officials")) return "officials";
-    if (path.includes("/add")) return "form";
-    if (path.includes("/edit")) return "form";
-    if (path.includes("/list")) return "list";
+    if (path.includes("/registry")) return "registry"; // Consolidated view
     if (path.includes("/profile")) return "profile";
     if (path.includes("/settings")) return "settings";
     return "dashboard";
   };
 
+  // Helper for Reports (keeping this logic for now as Report component might use it props)
   const getAgeGroup = (age) => {
     if (age >= 15 && age <= 17) return "Child Youth (15-17 yrs old)";
     if (age >= 18 && age <= 24) return "Core Youth (18-24 yrs old)";
@@ -49,21 +46,17 @@ export default function SKYouthProfilingSystem() {
     return "N/A";
   };
 
-  // --- REFACTORED DATA FETCHING ---
   const fetchProfiles = async (query = "") => {
     setIsLoading(true);
     try {
-      // Calling Service instead of fetch directly
       const data = await ProfileService.getAll(query);
-
       const processed = data.map((p) => ({
         ...p,
         youthAgeGroup: getAgeGroup(p.age),
       }));
       setProfiles(processed);
     } catch (error) {
-      // Error is logged in Service, we just handle UI state here
-      // Optional: Add a toast notification here
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -72,42 +65,6 @@ export default function SKYouthProfilingSystem() {
   useEffect(() => {
     fetchProfiles();
   }, []);
-
-  // --- REFACTORED SAVE (Create/Update) ---
-  const handleSaveProfile = async (profileData) => {
-    setIsLoading(true);
-    try {
-      if (profileData.id) {
-        // UPDATE
-        await ProfileService.update(profileData.id, profileData);
-        alert("Profile Updated!");
-      } else {
-        // CREATE
-        await ProfileService.create(profileData);
-        alert("Profile Saved!");
-      }
-      await fetchProfiles();
-    } catch (error) {
-      alert("Operation Failed. Check console for details.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // --- REFACTORED DELETE ---
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this profile?"))
-      return;
-    setIsLoading(true);
-    try {
-      await ProfileService.delete(id);
-      await fetchProfiles();
-    } catch (error) {
-      alert("Delete Failed.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className={isDarkMode ? "dark" : ""}>
@@ -154,34 +111,15 @@ export default function SKYouthProfilingSystem() {
                   path="/officials"
                   element={<SKOfficials />}
                 />
+                {/* REPLACED /list and /add with /registry */}
                 <Route
-                  path="/list"
-                  element={
-                    <ProfileList
-                      profiles={profiles}
-                      onDelete={handleDelete}
-                      onSearch={fetchProfiles}
-                    />
-                  }
+                  path="/registry"
+                  element={<YouthRegistry />}
                 />
-                <Route
-                  path="/add"
-                  element={
-                    <ProfileForm
-                      profiles={profiles}
-                      onSubmit={handleSaveProfile}
-                    />
-                  }
-                />
-                <Route
-                  path="/edit/:id"
-                  element={
-                    <ProfileForm
-                      profiles={profiles}
-                      onSubmit={handleSaveProfile}
-                    />
-                  }
-                />
+                {/* Redirect old routes for safety */}
+                <Route path="/list" element={<Navigate to="/registry" replace />} />
+                <Route path="/add" element={<Navigate to="/registry" replace />} />
+
                 <Route
                   path="/report"
                   element={<PrintableReport profiles={profiles} />}
