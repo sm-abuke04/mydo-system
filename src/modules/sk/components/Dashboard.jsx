@@ -5,52 +5,58 @@ import {
   ArrowLeft, Upload, Activity, Database, Clock, CheckCircle2, AlertCircle,
   FileBox, Loader2, Eye
 } from "lucide-react";
+import { SKReportService } from "../services/SKReportService"; // Real service
+import { useAuth } from "@/context/AuthContext";
 
 export default function Dashboard({ profiles, setView }) {
+  const { user } = useAuth();
   const [showReports, setShowReports] = useState(false);
   const [reports, setReports] = useState([]);
   const [isLoadingReports, setIsLoadingReports] = useState(false);
-
-  // MOCK DATA for Reports with Categories
-  const mockReports = [
-    // ANNUAL
-    { id: 1, name: "CBYDP (3 annum coverage)", category: "Annual Requirements", status: "Pending", submitted_at: null },
-    { id: 2, name: "ABYIP", category: "Annual Requirements", status: "Submitted", submitted_at: "2024-01-15" },
-    { id: 3, name: "Annual Budget", category: "Annual Requirements", status: "In Progress", submitted_at: null },
-    { id: 4, name: "KK Profiling", category: "Annual Requirements", status: "Pending", submitted_at: null },
-    { id: 5, name: "SK Directory", category: "Annual Requirements", status: "Pending", submitted_at: null },
-    { id: 6, name: "Fund Utilization Report", category: "Annual Requirements", status: "Submitted", submitted_at: "2024-01-20" },
-    { id: 7, name: "ABYIP Monitoring Form", category: "Annual Requirements", status: "Pending", submitted_at: null },
-
-    // QUARTERLY
-    { id: 8, name: "SK FPDP Board Compliance Report (Q1)", category: "Quarterly Requirements", status: "In Progress", submitted_at: null },
-    { id: 9, name: "SK FPDP Board Compliance Report (Q2)", category: "Quarterly Requirements", status: "Pending", submitted_at: null },
-    { id: 10, name: "SK FPDP Board Compliance Report (Q3)", category: "Quarterly Requirements", status: "Pending", submitted_at: null },
-    { id: 11, name: "SK FPDP Board Compliance Report (Q4)", category: "Quarterly Requirements", status: "Pending", submitted_at: null },
-
-    // MONTHLY
-    { id: 12, name: "SK Session Documents (January)", category: "Monthly Requirements", status: "Submitted", submitted_at: "2024-01-31" },
-    { id: 13, name: "SK Session Documents (February)", category: "Monthly Requirements", status: "Pending", submitted_at: null },
-  ];
+  const [isUploading, setIsUploading] = useState(false);
 
   // FETCH REPORTS WHEN TOGGLED
   useEffect(() => {
-    if (showReports) {
+    if (showReports && user?.barangay) {
       const loadReports = async () => {
         setIsLoadingReports(true);
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500));
-          setReports(mockReports);
+          // 1. Fetch existing reports for this barangay
+          let data = await SKReportService.getReportsByBarangay(user.barangay);
+
+          // 2. If empty, initialize the standard list for the first time
+          if (!data || data.length === 0) {
+             data = await SKReportService.initializeReportsForBarangay(user.barangay);
+          }
+
+          setReports(data || []);
         } catch (error) {
-          console.error("Failed to load reports");
+          console.error("Failed to load reports", error);
         } finally {
           setIsLoadingReports(false);
         }
       };
       loadReports();
     }
-  }, [showReports]);
+  }, [showReports, user]);
+
+  const handleFileUpload = async (event, reportId) => {
+    const file = event.target.files[0];
+    if (!file || !user) return;
+
+    setIsUploading(true);
+    try {
+        await SKReportService.submitReport(reportId, file, user.id, user.barangay);
+        // Refresh list
+        const updatedData = await SKReportService.getReportsByBarangay(user.barangay);
+        setReports(updatedData);
+        alert("Report uploaded successfully!");
+    } catch (error) {
+        alert("Failed to upload report. Please try again.");
+    } finally {
+        setIsUploading(false);
+    }
+  };
 
   // --- CLIENT-SIDE STATS CALCULATION (From 'profiles' prop) ---
   const stats = [
@@ -323,13 +329,15 @@ export default function Dashboard({ profiles, setView }) {
                       </div>
                       <div className="flex items-center gap-2">
                          {item.status === 'Submitted' ? (
-                            <button className="p-2.5 text-[#2E5E99] bg-[#E7F0FA] rounded-lg hover:bg-[#d1e3f8] dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40 transition-all" title="View Submission">
+                            <a href="#" className="p-2.5 text-[#2E5E99] bg-[#E7F0FA] rounded-lg hover:bg-[#d1e3f8] dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40 transition-all" title="View Submission">
                                 <Eye className="w-4 h-4" />
-                            </button>
+                            </a>
                          ) : (
-                            <button className="flex items-center gap-2 px-4 py-2 text-white bg-[#2E5E99] rounded-lg hover:bg-[#0D2440] shadow-md shadow-blue-900/10 transition-all active:scale-95 text-xs font-bold" title="Upload Document">
-                                <Upload className="w-4 h-4" /> Upload
-                            </button>
+                            <label className="flex items-center gap-2 px-4 py-2 text-white bg-[#2E5E99] rounded-lg hover:bg-[#0D2440] shadow-md shadow-blue-900/10 transition-all active:scale-95 text-xs font-bold cursor-pointer">
+                                <Upload className="w-4 h-4" />
+                                {isUploading ? 'Uploading...' : 'Upload'}
+                                <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, item.id)} disabled={isUploading} />
+                            </label>
                          )}
                       </div>
                     </div>
