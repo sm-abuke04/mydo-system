@@ -89,10 +89,12 @@ export default function Header({
 
   const handleLogout = async () => {
     try {
-      await logout();
-      navigate("/login", { replace: true }); // Ensure history is replaced
+        await logout();
+        // Force redirect if navigation fails or state lingers
+        window.location.href = "/login";
     } catch (error) {
-      console.error("Failed to log out", error);
+        console.error("Failed to log out", error);
+        alert("Logout failed. Please try again.");
     }
   };
 

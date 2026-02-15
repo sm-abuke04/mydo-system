@@ -5,19 +5,32 @@ import {
   ArrowLeft, Upload, Activity, Database, Clock, CheckCircle2, AlertCircle,
   FileBox, Loader2, Eye
 } from "lucide-react";
-// import { SKReportService } from "../services/SKReportService"; // Placeholder
 
 export default function Dashboard({ profiles, setView }) {
   const [showReports, setShowReports] = useState(false);
   const [reports, setReports] = useState([]);
   const [isLoadingReports, setIsLoadingReports] = useState(false);
 
-  // MOCK DATA for Reports (since service is not yet fully integrated)
+  // MOCK DATA for Reports with Categories
   const mockReports = [
-    { id: 1, name: "Comprehensive Barangay Youth Development Plan (CBYDP)", category: "Annual Requirements", status: "Pending", submitted_at: null },
-    { id: 2, name: "Annual Barangay Youth Investment Program (ABYIP)", category: "Annual Requirements", status: "Submitted", submitted_at: "2024-01-15" },
-    { id: 3, name: "Quarterly Financial Report (Q1)", category: "Quarterly Requirements", status: "Pending", submitted_at: null },
-    { id: 4, name: "Accomplishment Report (January)", category: "Monthly Requirements", status: "In Progress", submitted_at: null },
+    // ANNUAL
+    { id: 1, name: "CBYDP (3 annum coverage)", category: "Annual Requirements", status: "Pending", submitted_at: null },
+    { id: 2, name: "ABYIP", category: "Annual Requirements", status: "Submitted", submitted_at: "2024-01-15" },
+    { id: 3, name: "Annual Budget", category: "Annual Requirements", status: "In Progress", submitted_at: null },
+    { id: 4, name: "KK Profiling", category: "Annual Requirements", status: "Pending", submitted_at: null },
+    { id: 5, name: "SK Directory", category: "Annual Requirements", status: "Pending", submitted_at: null },
+    { id: 6, name: "Fund Utilization Report", category: "Annual Requirements", status: "Submitted", submitted_at: "2024-01-20" },
+    { id: 7, name: "ABYIP Monitoring Form", category: "Annual Requirements", status: "Pending", submitted_at: null },
+
+    // QUARTERLY
+    { id: 8, name: "SK FPDP Board Compliance Report (Q1)", category: "Quarterly Requirements", status: "In Progress", submitted_at: null },
+    { id: 9, name: "SK FPDP Board Compliance Report (Q2)", category: "Quarterly Requirements", status: "Pending", submitted_at: null },
+    { id: 10, name: "SK FPDP Board Compliance Report (Q3)", category: "Quarterly Requirements", status: "Pending", submitted_at: null },
+    { id: 11, name: "SK FPDP Board Compliance Report (Q4)", category: "Quarterly Requirements", status: "Pending", submitted_at: null },
+
+    // MONTHLY
+    { id: 12, name: "SK Session Documents (January)", category: "Monthly Requirements", status: "Submitted", submitted_at: "2024-01-31" },
+    { id: 13, name: "SK Session Documents (February)", category: "Monthly Requirements", status: "Pending", submitted_at: null },
   ];
 
   // FETCH REPORTS WHEN TOGGLED
@@ -105,9 +118,8 @@ export default function Dashboard({ profiles, setView }) {
     },
   ];
 
-  // GROUP REPORTS BY CATEGORY (Helper function)
+  // GROUP REPORTS BY CATEGORY
   const groupReports = () => {
-    // Defines structure even if empty
     const groups = {
       "Annual Requirements": [],
       "Quarterly Requirements": [],
