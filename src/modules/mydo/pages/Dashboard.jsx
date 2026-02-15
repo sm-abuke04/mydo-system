@@ -28,13 +28,18 @@ const Dashboard = () => {
         setActivities(logsData || []);
 
         // Load Access Requests
+        // Note: 'status' is case-sensitive. Ensure DB uses 'Pending'.
         const { data: requests, error } = await supabase
             .from('users')
             .select('*')
             .eq('status', 'Pending')
             .order('created_at', { ascending: false });
 
-        if (!error) setAccessRequests(requests || []);
+        if (error) {
+            console.error("Error loading access requests:", error);
+        } else {
+            setAccessRequests(requests || []);
+        }
 
       } catch (error) {
         console.error("Failed to load dashboard:", error);
@@ -69,7 +74,6 @@ const Dashboard = () => {
 
         // 3. AUTO-CREATE SK OFFICIAL RECORD (If SK Chair)
         if (userData.role === 'SK_CHAIR') {
-            // Check if exists first to avoid duplicates
             const { data: existing } = await supabase
                 .from('sk_officials')
                 .select('id')
@@ -85,15 +89,14 @@ const Dashboard = () => {
                         position: 'SK Chairperson',
                         barangay: userData.barangay,
                         status: 'Active',
-                        skmt_no: `SK-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`, // Auto-gen
-                        gender: 'Male' // Default, editable later
+                        skmt_no: `SK-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+                        gender: 'Male'
                     }]);
 
                 if (insertError) console.error("Failed to auto-create SK Official record:", insertError);
             }
         }
 
-        // Remove from list
         setAccessRequests(prev => prev.filter(u => u.id !== userId));
         alert("User approved successfully.");
     } catch (err) {
@@ -110,7 +113,6 @@ const Dashboard = () => {
     try {
         const { error } = await supabase.from('users').update({ status: 'Rejected' }).eq('id', userId);
         if (error) throw error;
-        // Remove from list
         setAccessRequests(prev => prev.filter(u => u.id !== userId));
     } catch (err) {
         console.error(err);
