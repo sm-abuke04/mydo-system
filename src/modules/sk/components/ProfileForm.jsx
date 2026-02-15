@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Save, X, Loader2, ArrowLeft } from "lucide-react"; // Added ArrowLeft
+import { Save, X, Loader2, ArrowLeft } from "lucide-react";
 import { ProfileService } from "../services/ProfileService";
 import {
   CIVIL_STATUS_OPTIONS,
@@ -11,8 +11,6 @@ import {
 } from "../../sk-system/data/Form_Constants";
 
 export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
-  // Use props 'id' instead of useParams
-  
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -36,9 +34,9 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
       };
       fetchProfile();
     } else {
-        setFormData(INITIAL_FORM_STATE); // Reset form if adding
+        setFormData(INITIAL_FORM_STATE);
     }
-  }, [id]); // Depend on prop 'id'
+  }, [id]);
 
   // AGE CALCULATION EFFECT
   useEffect(() => {
@@ -51,11 +49,9 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
         age--;
       }
 
-      // Update age if different
       if (formData.age !== age) {
         setFormData(prev => {
           const updates = { ...prev, age };
-          // If age becomes < 18, clear work status
           if (age < 18) {
             updates.workStatus = "";
           }
@@ -134,10 +130,42 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* ... (Keep existing form fields exactly as they were) ... */}
-        {/* SECTION 1: PERSONAL INFO */}
+
+        {/* SECTION 1: LOCATION (Matches columns 2-5: Region, Province, City, Barangay) */}
         <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
-          <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">I. Personal Information</h3>
+           <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">I. Location Information</h3>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+             <div className="space-y-1">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Region</label>
+               <input disabled name="region" value={formData.region} className="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-transparent rounded-lg text-sm font-bold dark:text-gray-300 cursor-not-allowed" />
+             </div>
+             <div className="space-y-1">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Province</label>
+               <input disabled name="province" value={formData.province} className="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-transparent rounded-lg text-sm font-bold dark:text-gray-300 cursor-not-allowed" />
+             </div>
+             <div className="space-y-1">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">City / Municipality</label>
+               <input disabled name="cityMunicipality" value={formData.cityMunicipality} className="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-transparent rounded-lg text-sm font-bold dark:text-gray-300 cursor-not-allowed" />
+             </div>
+             <div className="space-y-1">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Barangay</label>
+               <input required name="barangay" value={formData.barangay} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
+             </div>
+           </div>
+        </div>
+
+        {/* SECTION 2: PERSONAL INFO (Matches Name, Age, Birthday, Sex, Civil Status) */}
+        <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
+          <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">II. Personal Information</h3>
+
+          {/* SKMT NO - Column 1 */}
+          <div className="grid grid-cols-1 gap-5 mb-5">
+             <div className="space-y-1">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">SKMT ID No.</label>
+               <input required name="skmtNo" value={formData.skmtNo} onChange={handleChange} placeholder="YYYY-NNN" className="w-full md:w-1/3 p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
+             </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             <div className="space-y-1">
               <label className="text-xs font-bold text-[#7BA4D0] uppercase">First Name</label>
@@ -189,22 +217,11 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
               </select>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-            <div className="space-y-1">
-                <label className="text-xs font-bold text-[#7BA4D0] uppercase">Email Address</label>
-                <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
-            </div>
-            <div className="space-y-1">
-                <label className="text-xs font-bold text-[#7BA4D0] uppercase">Contact Number</label>
-                <input type="tel" name="contact" value={formData.contact} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
-            </div>
-          </div>
         </div>
 
-        {/* SECTION 2: DEMOGRAPHICS */}
+        {/* SECTION 3: DEMOGRAPHICS (Matches Youth Class, Age Group, Educ, Work) */}
         <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
-           <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">II. Demographic Information</h3>
+           <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">III. Demographic Information</h3>
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
              <div className="space-y-1">
@@ -215,7 +232,7 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
                </select>
              </div>
              <div className="space-y-1">
-               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Educational Background</label>
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Highest Educational Attainment</label>
                <select name="educationalBackground" value={formData.educationalBackground} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
                   <option value="">Select Level</option>
                   {EDUCATIONAL_BACKGROUND_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -259,69 +276,56 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
                </select>
              </div>
            </div>
-
-           <div className="flex gap-8 mt-6">
-                <label className="flex items-center gap-3 cursor-pointer p-3 bg-white dark:bg-gray-800 rounded-xl border border-[#E7F0FA] dark:border-gray-600 w-full hover:border-[#2E5E99] transition-all">
-                    <input
-                        type="checkbox"
-                        name="isSkVoter"
-                        checked={formData.isSkVoter}
-                        onChange={handleChange}
-                        className="w-5 h-5 text-[#2E5E99] rounded border-gray-300 focus:ring-[#2E5E99]"
-                    />
-                    <div className="flex flex-col">
-                        <span className="text-sm font-bold text-[#0D2440] dark:text-white">Registered SK Voter?</span>
-                        <span className="text-xs text-[#7BA4D0]">Check if yes</span>
-                    </div>
-                </label>
-
-                <label className="flex items-center gap-3 cursor-pointer p-3 bg-white dark:bg-gray-800 rounded-xl border border-[#E7F0FA] dark:border-gray-600 w-full hover:border-[#2E5E99] transition-all">
-                    <input
-                        type="checkbox"
-                        name="isNationalVoter"
-                        checked={formData.isNationalVoter}
-                        onChange={handleChange}
-                        className="w-5 h-5 text-[#2E5E99] rounded border-gray-300 focus:ring-[#2E5E99]"
-                    />
-                    <div className="flex flex-col">
-                        <span className="text-sm font-bold text-[#0D2440] dark:text-white">Registered National Voter?</span>
-                        <span className="text-xs text-[#7BA4D0]">Check if yes</span>
-                    </div>
-                </label>
-           </div>
         </div>
 
-        {/* SECTION 3: ADDRESS */}
+        {/* SECTION 4: CONTACT & PUROK (Matches Email, Contact, Home Address) */}
         <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
-           <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">III. Address Information</h3>
+           <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">IV. Contact Information</h3>
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
              <div className="space-y-1">
-               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Barangay</label>
-               <input required name="barangay" value={formData.barangay} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
+                <label className="text-xs font-bold text-[#7BA4D0] uppercase">Email Address</label>
+                <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
              </div>
              <div className="space-y-1">
-               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Purok / Zone</label>
+                <label className="text-xs font-bold text-[#7BA4D0] uppercase">Contact Number</label>
+                <input type="tel" name="contact" value={formData.contact} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
+             </div>
+             <div className="space-y-1 md:col-span-2">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Purok / Zone (Home Address)</label>
                <input name="purokZone" value={formData.purokZone} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
-             </div>
-             {/* Read Only / Pre-filled */}
-             <div className="space-y-1 opacity-60">
-               <label className="text-xs font-bold text-[#7BA4D0] uppercase">City / Municipality</label>
-               <input disabled value={formData.cityMunicipality} className="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-transparent rounded-lg text-sm font-bold dark:text-gray-300 cursor-not-allowed" />
-             </div>
-             <div className="space-y-1 opacity-60">
-               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Province</label>
-               <input disabled value={formData.province} className="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-transparent rounded-lg text-sm font-bold dark:text-gray-300 cursor-not-allowed" />
              </div>
            </div>
         </div>
 
-        {/* SECTION 4: SKMT */}
-        <div className="grid grid-cols-1 gap-5">
-           <div className="space-y-1">
-             <label className="text-xs font-bold text-[#7BA4D0] uppercase">SKMT Number</label>
-             <input required name="skmtNo" value={formData.skmtNo} onChange={handleChange} placeholder="YYYY-NNN" className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
-           </div>
+        <div className="flex gap-8 mt-6">
+            <label className="flex items-center gap-3 cursor-pointer p-3 bg-white dark:bg-gray-800 rounded-xl border border-[#E7F0FA] dark:border-gray-600 w-full hover:border-[#2E5E99] transition-all">
+                <input
+                    type="checkbox"
+                    name="isSkVoter"
+                    checked={formData.isSkVoter}
+                    onChange={handleChange}
+                    className="w-5 h-5 text-[#2E5E99] rounded border-gray-300 focus:ring-[#2E5E99]"
+                />
+                <div className="flex flex-col">
+                    <span className="text-sm font-bold text-[#0D2440] dark:text-white">Registered SK Voter?</span>
+                    <span className="text-xs text-[#7BA4D0]">Check if yes</span>
+                </div>
+            </label>
+
+            <label className="flex items-center gap-3 cursor-pointer p-3 bg-white dark:bg-gray-800 rounded-xl border border-[#E7F0FA] dark:border-gray-600 w-full hover:border-[#2E5E99] transition-all">
+                <input
+                    type="checkbox"
+                    name="isNationalVoter"
+                    checked={formData.isNationalVoter}
+                    onChange={handleChange}
+                    className="w-5 h-5 text-[#2E5E99] rounded border-gray-300 focus:ring-[#2E5E99]"
+                />
+                <div className="flex flex-col">
+                    <span className="text-sm font-bold text-[#0D2440] dark:text-white">Registered National Voter?</span>
+                    <span className="text-xs text-[#7BA4D0]">Check if yes</span>
+                </div>
+            </label>
         </div>
 
         {/* FOOTER ACTIONS */}

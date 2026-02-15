@@ -6,7 +6,7 @@ export const YOUTH_CLASSIFICATION_OPTIONS = [
   'Working Youth',
   'In School Youth',
   'Out of School Youth',
-  'Youth w/ Specific Needs', // Fixed capitalization to match Report
+  'Youth w/ Specific Needs',
   'Children in Conflict w/ Law',
   'Person w/ Disability',
   'Indigenous People'
@@ -21,26 +21,26 @@ export const YOUTH_AGE_GROUP_OPTIONS = [
 export const WORK_STATUS_OPTIONS = [
   'Employed',
   'Unemployed',
-  'Self-Employed', // Fixed capitalization
-  'Currently Looking for a Job', // Fixed capitalization
+  'Self-Employed',
+  'Currently Looking for a Job',
   'Not Interested Looking for a Job'
 ];
 
 export const EDUCATIONAL_BACKGROUND_OPTIONS = [
   'Elementary Level', 'Elementary Grad', 'High School Level', 'High School Grad',
   'Vocational Grad', 'College Level', 'College Grad', 'Masters Level',
-  'Masters Grad', 'Doctorate Level', 'Doctorate Grad' // Fixed to match Report
+  'Masters Grad', 'Doctorate Level', 'Doctorate Grad'
 ];
 
 export const INITIAL_FORM_STATE = {
-  id: null, // Added ID for editing
+  id: null,
   firstName: '',
   middleName: '',
   lastName: '',
   suffix: '',
-  region: 'Eastern Visayas', // Default
-  province: 'Northern Samar', // Default
-  cityMunicipality: 'Catarman', // Default
+  region: 'Eastern Visayas',
+  province: 'Northern Samar',
+  cityMunicipality: 'Catarman',
   barangay: '',
   purokZone: '',
   sex: '',
@@ -49,10 +49,11 @@ export const INITIAL_FORM_STATE = {
   email: '',
   contact: '',
   civilStatus: '',
-  youthClassification: [],
+  youthClassification: [], // Array
   youthAgeGroup: '',
   workStatus: '',
   educationalBackground: '',
-  isSkVoter: false,       // NEW FIELD
-  isNationalVoter: false  // NEW FIELD
+  isSkVoter: false,
+  isNationalVoter: false,
+  skmtNo: '' // Added for consistency
 };

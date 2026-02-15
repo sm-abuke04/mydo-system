@@ -1,21 +1,19 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import {
-  Search, Edit, Trash2, Eye, MoreVertical,
-  ChevronLeft, ChevronRight, Filter, Briefcase, GraduationCap, Loader2
+  Search, Edit, Trash2, ChevronLeft, ChevronRight, Filter, Loader2
 } from "lucide-react";
 import { ProfileService } from "../services/ProfileService";
 
 export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLoading }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
+  const itemsPerPage = 10; // Increased items per page for table view
   const [isDeleting, setIsDeleting] = useState(false);
 
   // --- FILTERING ---
   const filteredProfiles = profiles.filter((profile) => {
     if (!profile) return false;
-    const searchString = `${profile.firstName || ""} ${profile.lastName || ""} ${profile.skmtNo || ""}`;
+    const searchString = `${profile.firstName || ""} ${profile.lastName || ""} ${profile.id || ""}`;
     return searchString.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -46,10 +44,35 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
     }
   };
 
+  // Helper for arrays
+  const displayArray = (arr) => Array.isArray(arr) ? arr.join(", ") : arr;
+
+  // --- TABLE COLUMNS CONFIG ---
+  // Requested: No, Region, Province, City/Municipality, Barangay, Name, Age, Birthday, Sex, Civil Status, Youth Classification, Youth Age Group, Email Address, Contact Number, Home Address (Purok/Zone), Highest Education Attainment, Work Status
+  const columns = [
+    { header: "ID No.", accessor: "id", width: "w-16" },
+    { header: "Region", accessor: "region", width: "w-32" },
+    { header: "Province", accessor: "province", width: "w-32" },
+    { header: "City/Mun.", accessor: "cityMunicipality", width: "w-32" },
+    { header: "Barangay", accessor: "barangay", width: "w-32" },
+    { header: "Name", accessor: (p) => `${p.firstName} ${p.lastName}`, width: "w-48 font-bold" },
+    { header: "Age", accessor: "age", width: "w-16" },
+    { header: "Birthday", accessor: "birthday", width: "w-32" },
+    { header: "Sex", accessor: "sex", width: "w-24" },
+    { header: "Civil Status", accessor: "civilStatus", width: "w-32" },
+    { header: "Classification", accessor: (p) => displayArray(p.youthClassification), width: "w-48 text-xs" },
+    { header: "Age Group", accessor: "youthAgeGroup", width: "w-32 text-xs" },
+    { header: "Email", accessor: "email", width: "w-48 text-xs" },
+    { header: "Contact No.", accessor: "contact", width: "w-32" },
+    { header: "Purok/Zone", accessor: "purokZone", width: "w-32" },
+    { header: "Education", accessor: "educationalBackground", width: "w-40 text-xs" },
+    { header: "Work Status", accessor: "workStatus", width: "w-32" },
+  ];
+
   return (
     <div className="bg-white dark:bg-[#1e293b] rounded-xl shadow-lg border border-[#E7F0FA] dark:border-gray-700 flex flex-col h-full overflow-hidden transition-colors">
       
-      {/* TOOLBAR (Header removed as Parent handles it, kept Search/Filter) */}
+      {/* TOOLBAR */}
       <div className="p-5 border-b border-[#E7F0FA] dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50 dark:bg-gray-800/50">
         <div className="flex items-center gap-2">
            <span className="bg-[#2E5E99] text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">
@@ -62,7 +85,7 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7BA4D0]" />
             <input
               type="text"
-              placeholder="Search name or SKMT..."
+              placeholder="Search name or ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-[#2E5E99] dark:text-white w-64 shadow-sm"
@@ -82,93 +105,44 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
             </div>
         )}
 
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse whitespace-nowrap">
           <thead className="bg-[#E7F0FA]/50 dark:bg-gray-800/50 sticky top-0 z-10 backdrop-blur-sm">
             <tr>
-              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">SKMT ID</th>
-              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">Profile Details</th>
-              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">Work & Education</th>
-              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider">Classification</th>
-              <th className="px-6 py-4 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider text-right">Actions</th>
+              {columns.map((col, idx) => (
+                <th key={idx} className="px-4 py-3 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+                    {col.header}
+                </th>
+              ))}
+              <th className="px-4 py-3 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider text-right sticky right-0 bg-[#f9fbfd] dark:bg-[#1e293b] border-b border-gray-200 dark:border-gray-700 shadow-l">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E7F0FA] dark:divide-gray-700">
             {paginatedProfiles.length > 0 ? (
               paginatedProfiles.map((profile) => (
                 <tr key={profile.id} className="hover:bg-[#E7F0FA]/50 dark:hover:bg-gray-700/30 transition-colors group">
-                  <td className="px-6 py-4 text-sm font-bold text-[#2E5E99] dark:text-blue-400 font-mono align-top pt-5">
-                    {profile.skmtNo || "---"}
-                  </td>
-                  <td className="px-6 py-4 align-top">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-sm font-bold text-[#0D2440] dark:text-white">
-                        {profile.lastName}, {profile.firstName}
-                      </span>
-                      <div className="flex items-center gap-2 text-xs text-[#7BA4D0] dark:text-gray-500">
-                         <span>{profile.age} yrs old • {profile.sex}</span>
-                         <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                         <span>{profile.civilStatus}</span>
-                      </div>
-                      <span className="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">
-                        Brgy. {profile.barangay} {profile.purokZone && `(Prk. ${profile.purokZone})`}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 align-top">
-                    <div className="flex flex-col gap-2">
-                        {profile.workStatus && (
-                            <span className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
-                                <Briefcase className="w-3 h-3 text-[#2E5E99]" /> {profile.workStatus}
-                            </span>
-                        )}
-                        {profile.educationalBackground && (
-                            <span className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
-                                <GraduationCap className="w-3 h-3 text-orange-500" /> {profile.educationalBackground}
-                            </span>
-                        )}
-                        {!profile.workStatus && !profile.educationalBackground && <span className="text-xs text-gray-400 italic">No info</span>}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 align-top pt-5">
-                     <div className="flex flex-wrap gap-1">
-                        {/* Display Youth Age Group if available */}
-                        {profile.youthAgeGroup && (
-                            <span className="px-2 py-1 rounded-md bg-purple-50 text-purple-600 border border-purple-100 text-[10px] font-bold uppercase">
-                                {profile.youthAgeGroup.split(' ')[0]}
-                            </span>
-                        )}
+                  {columns.map((col, idx) => (
+                    <td key={idx} className={`px-4 py-3 text-sm text-[#0D2440] dark:text-gray-300 ${col.width || ''}`}>
+                        {typeof col.accessor === 'function' ? col.accessor(profile) : (profile[col.accessor] || "---")}
+                    </td>
+                  ))}
 
-                        {/* Display Classification Badge */}
-                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase border ${
-                        (Array.isArray(profile.youthClassification) ? profile.youthClassification : [profile.youthClassification]).includes('In School Youth')
-                            ? 'bg-green-50 text-green-600 border-green-100'
-                            : 'bg-orange-50 text-orange-600 border-orange-100'
-                        }`}>
-                        {Array.isArray(profile.youthClassification) && profile.youthClassification.length > 0
-                            ? (profile.youthClassification.includes('In School Youth') ? 'In School' : 'Out of School')
-                            : (profile.youthClassification || "Unclassified")}
-                        </span>
-
-                        {/* More indicator */}
-                        {Array.isArray(profile.youthClassification) && profile.youthClassification.length > 1 && (
-                            <span className="px-1.5 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold" title={profile.youthClassification.join(', ')}>
-                                +{profile.youthClassification.length - 1}
-                            </span>
-                        )}
-                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-right align-top pt-5">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* ACTIONS COLUMN (Sticky Right) */}
+                  <td className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-[#1e293b] group-hover:bg-[#f3f7fc] dark:group-hover:bg-[#252f45] transition-colors border-l border-gray-100 dark:border-gray-700 shadow-l">
+                    <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => onEdit && onEdit(profile.id)} // Use parent handler
-                        className="p-2 text-[#2E5E99] bg-blue-50 hover:bg-[#2E5E99] hover:text-white rounded-lg transition-colors"
+                        onClick={() => onEdit && onEdit(profile.id)}
+                        className="p-1.5 text-[#2E5E99] bg-blue-50 hover:bg-[#2E5E99] hover:text-white rounded-lg transition-colors"
+                        title="Edit"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleDelete(profile.id)}
                         disabled={isDeleting}
-                        className="p-2 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                        className="p-1.5 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                        title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -178,7 +152,7 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="px-6 py-12 text-center text-[#7BA4D0] dark:text-gray-500">
+                <td colSpan={columns.length + 1} className="px-6 py-12 text-center text-[#7BA4D0] dark:text-gray-500">
                   {searchTerm ? `No profiles found matching "${searchTerm}"` : "No profiles added yet."}
                 </td>
               </tr>

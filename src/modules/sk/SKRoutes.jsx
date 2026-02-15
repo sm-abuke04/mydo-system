@@ -5,7 +5,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import Dashboard from "./components/Dashboard";
-import YouthRegistry from "./components/YouthRegistry"; // NEW COMPONENT
+import YouthRegistry from "./components/YouthRegistry";
 import PrintableReport from "./components/PrintableReport";
 import MyProfile from "./components/MyProfile";
 import SystemSettings from "./components/SystemSettings";
@@ -32,13 +32,12 @@ export default function SKYouthProfilingSystem() {
     const path = location.pathname;
     if (path.includes("/dashboard")) return "dashboard";
     if (path.includes("/officials")) return "officials";
-    if (path.includes("/registry")) return "registry"; // Consolidated view
+    if (path.includes("/registry")) return "registry";
     if (path.includes("/profile")) return "profile";
     if (path.includes("/settings")) return "settings";
     return "dashboard";
   };
 
-  // Helper for Reports (keeping this logic for now as Report component might use it props)
   const getAgeGroup = (age) => {
     if (age >= 15 && age <= 17) return "Child Youth (15-17 yrs old)";
     if (age >= 18 && age <= 24) return "Core Youth (18-24 yrs old)";
@@ -101,31 +100,29 @@ export default function SKYouthProfilingSystem() {
               <Routes>
                 <Route
                   path="/"
-                  element={<Navigate to="/dashboard" replace />}
+                  element={<Navigate to="dashboard" replace />}
                 />
                 <Route
-                  path="/dashboard"
+                  path="dashboard" // Fixed: Relative path
                   element={<Dashboard profiles={profiles} setView={() => {}} />}
                 />
                 <Route
-                  path="/officials"
+                  path="officials" // Fixed: Relative path
                   element={<SKOfficials />}
                 />
-                {/* REPLACED /list and /add with /registry */}
                 <Route
-                  path="/registry"
+                  path="registry" // Fixed: Relative path
                   element={<YouthRegistry />}
                 />
-                {/* Redirect old routes for safety */}
-                <Route path="/list" element={<Navigate to="/registry" replace />} />
-                <Route path="/add" element={<Navigate to="/registry" replace />} />
+                <Route path="list" element={<Navigate to="registry" replace />} />
+                <Route path="add" element={<Navigate to="registry" replace />} />
 
                 <Route
-                  path="/report"
+                  path="report" // Fixed: Relative path
                   element={<PrintableReport profiles={profiles} />}
                 />
-                <Route path="/profile" element={<MyProfile />} />
-                <Route path="/settings" element={<SystemSettings />} />
+                <Route path="profile" element={<MyProfile />} />
+                <Route path="settings" element={<SystemSettings />} />
               </Routes>
             </div>
           </main>
