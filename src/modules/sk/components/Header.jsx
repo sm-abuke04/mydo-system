@@ -90,11 +90,22 @@ export default function Header({
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login");
+      navigate("/login", { replace: true }); // Ensure history is replaced
     } catch (error) {
       console.error("Failed to log out", error);
     }
   };
+
+  const handleProfileToggle = () => {
+     setIsProfileOpen(!isProfileOpen);
+     setIsNotifOpen(false);
+  };
+
+  const handleNotifToggle = () => {
+     setIsNotifOpen(!isNotifOpen);
+     setIsProfileOpen(false);
+  };
+
 
   // Header Content Logic
   const getHeaderContent = () => {
@@ -105,12 +116,14 @@ export default function Header({
         return { title: "SK Officials", subtitle: "Barangay Directory" };
       case "form":
         return { title: "New Profile", subtitle: "Add Youth Member" };
-      case "list":
-        return { title: "Database", subtitle: `${profileCount} Profiles` };
+      case "registry":
+        return { title: "Youth Registry", subtitle: `${profileCount} Profiles` };
       case "profile":
         return { title: "My Profile", subtitle: "Account Management" };
       case "settings":
         return { title: "Settings", subtitle: "System Configuration" };
+      case "report":
+        return { title: "Reports", subtitle: "Printable Summaries" };
       default:
         return { title: "SK System", subtitle: "Youth Profiling" };
     }
@@ -163,7 +176,7 @@ export default function Header({
             <h2 className="text-xl font-bold text-[#0D2440] dark:text-white">
               {title}
             </h2>
-            <p className="text-sm text-[#2E5E99] dark:text-[#7BA4D0] font-medium">
+            <p className="text-sm text-[#2E5E99] dark:text-blue-400 font-medium">
               {subtitle}
             </p>
           </div>
@@ -174,7 +187,7 @@ export default function Header({
           onClick={() => navigate("/sk/dashboard")}
           className="hidden md:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center group cursor-pointer z-30"
         >
-          <div className="w-16 h-16 bg-transparent border-2 border-[#E7F0FA] dark:border-gray-700 rounded-full flex items-center justify-center shadow-sm group-hover:border-[#2E5E99] dark:group-hover:border-blue-500 transition-all overflow-hidden">
+          <div className="w-16 h-16 bg-transparent border-2 border-[#E7F0FA] dark:border-gray-700 rounded-full flex items-center justify-center shadow-sm group-hover:border-[#2E5E99] dark:group-hover:border-blue-500 transition-all overflow-hidden bg-white dark:bg-gray-800">
             <img
               src={SKLogo}
               alt="SK Seal"
@@ -206,10 +219,7 @@ export default function Header({
           {/* NOTIFICATIONS */}
           <div className="relative">
             <button
-              onClick={() => {
-                setIsNotifOpen(!isNotifOpen);
-                setIsProfileOpen(false);
-              }}
+              onClick={handleNotifToggle}
               className={`relative p-2 rounded-full transition-all ${
                 isNotifOpen
                   ? "bg-[#E7F0FA] dark:bg-gray-700 text-[#2E5E99] dark:text-white"
@@ -223,7 +233,7 @@ export default function Header({
             </button>
 
             {isNotifOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#1e293b] rounded-xl shadow-xl border border-[#E7F0FA] dark:border-gray-700 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#1e293b] rounded-xl shadow-xl border border-[#E7F0FA] dark:border-gray-700 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                 <div className="px-4 py-2 border-b border-[#E7F0FA] dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
                   <span className="text-sm font-bold text-[#0D2440] dark:text-white">
                     Notifications ({unreadCount})
@@ -307,10 +317,7 @@ export default function Header({
           {/* PROFILE */}
           <div className="relative">
             <button
-              onClick={() => {
-                setIsProfileOpen(!isProfileOpen);
-                setIsNotifOpen(false);
-              }}
+              onClick={handleProfileToggle}
               className="flex items-center gap-3 hover:bg-[#E7F0FA] dark:hover:bg-gray-700 p-1.5 rounded-xl transition-all"
             >
               <div className="text-right hidden md:block">
@@ -330,8 +337,8 @@ export default function Header({
             </button>
 
             {isProfileOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#1e293b] rounded-xl shadow-xl border border-[#E7F0FA] dark:border-gray-700 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="px-4 py-3 border-b border-[#E7F0FA] dark:border-gray-700 mb-2">
+              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#1e293b] rounded-xl shadow-xl border border-[#E7F0FA] dark:border-gray-700 py-2 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                <div className="px-4 py-3 border-b border-[#E7F0FA] dark:border-gray-700 mb-2 bg-gray-50 dark:bg-gray-800/50">
                   <p className="text-sm font-bold text-[#0D2440] dark:text-white">
                     Signed in as
                   </p>
@@ -339,25 +346,30 @@ export default function Header({
                     {user?.email}
                   </p>
                 </div>
-                <button
-                  onClick={() => handleNavigation("/sk/profile")}
-                  className="w-full text-left px-4 py-2 text-sm text-[#0D2440] dark:text-gray-200 hover:bg-[#E7F0FA] dark:hover:bg-gray-700 flex items-center gap-2"
-                >
-                  <User className="w-4 h-4" /> My Profile
-                </button>
-                <button
-                  onClick={() => handleNavigation("/sk/settings")}
-                  className="w-full text-left px-4 py-2 text-sm text-[#0D2440] dark:text-gray-200 hover:bg-[#E7F0FA] dark:hover:bg-gray-700 flex items-center gap-2"
-                >
-                  <Settings className="w-4 h-4" /> System Settings
-                </button>
+                <div className="p-2 space-y-1">
+                    <button
+                    onClick={() => handleNavigation("/sk/profile")}
+                    className="w-full text-left px-3 py-2 text-sm font-medium text-[#0D2440] dark:text-gray-200 hover:bg-[#E7F0FA] dark:hover:bg-gray-700 rounded-lg flex items-center gap-3 transition-colors"
+                    >
+                    <User className="w-4 h-4 text-[#2E5E99]" /> My Profile
+                    </button>
+                    <button
+                    onClick={() => handleNavigation("/sk/settings")}
+                    className="w-full text-left px-3 py-2 text-sm font-medium text-[#0D2440] dark:text-gray-200 hover:bg-[#E7F0FA] dark:hover:bg-gray-700 rounded-lg flex items-center gap-3 transition-colors"
+                    >
+                    <Settings className="w-4 h-4 text-[#2E5E99]" /> System Settings
+                    </button>
+                </div>
+
                 <div className="my-2 border-t border-[#E7F0FA] dark:border-gray-700"></div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-                >
-                  <LogOut className="w-4 h-4" /> Sign Out
-                </button>
+                <div className="p-2">
+                    <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center gap-3 transition-colors"
+                    >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                    </button>
+                </div>
               </div>
             )}
           </div>
