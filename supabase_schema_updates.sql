@@ -1,9 +1,13 @@
 -- UPGRADE SCRIPT FOR SK & MYDO SYSTEM
 -- Run this in your Supabase SQL Editor to update the database schema
 
--- 1. UPDATES FOR 'profiles' TABLE (KK Profiles)
+-- 0. RENAME TABLE (Refactoring)
+-- Renaming 'profiles' to 'kk_profiles' for clarity
+ALTER TABLE IF EXISTS profiles RENAME TO kk_profiles;
+
+-- 1. UPDATES FOR 'kk_profiles' TABLE (KK Profiles)
 -- Add missing columns for the enhanced Profile Form
-ALTER TABLE profiles
+ALTER TABLE kk_profiles
 ADD COLUMN IF NOT EXISTS educational_background text,
 ADD COLUMN IF NOT EXISTS youth_age_group text,
 ADD COLUMN IF NOT EXISTS is_national_voter boolean DEFAULT false,
@@ -16,11 +20,11 @@ BEGIN
     IF EXISTS (
         SELECT 1
         FROM information_schema.columns
-        WHERE table_name = 'profiles'
+        WHERE table_name = 'kk_profiles'
         AND column_name = 'youth_classification'
         AND data_type = 'text'
     ) THEN
-        ALTER TABLE profiles
+        ALTER TABLE kk_profiles
         ALTER COLUMN youth_classification TYPE text[]
         USING string_to_array(youth_classification, ',');
     END IF;
@@ -68,7 +72,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- 6. ROW LEVEL SECURITY (RLS) POLICIES
 
 -- Enable RLS on all tables
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kk_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sk_officials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sk_reports ENABLE ROW LEVEL SECURITY;

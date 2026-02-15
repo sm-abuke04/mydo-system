@@ -6,10 +6,10 @@ export const MydoService = {
     try {
       // Parallel requests for faster loading
       const [totalYouth, employed, outOfSchool, activePuroks] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('work_status', 'Employed'),
+        supabase.from('kk_profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('kk_profiles').select('*', { count: 'exact', head: true }).eq('work_status', 'Employed'),
         // Fix: Use correct method `.contains()` instead of `.cs()` for array containment
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).contains('youth_classification', ['Out of School Youth']),
+        supabase.from('kk_profiles').select('*', { count: 'exact', head: true }).contains('youth_classification', ['Out of School Youth']),
         supabase.from('barangays').select('*', { count: 'exact', head: true })
       ]);
 
@@ -101,7 +101,7 @@ export const MydoService = {
   // --- PROFILE MANAGEMENT ---
   async getProfiles({ barangay = null, search = '', status = 'All', gender = 'All', page = 1, limit = 10 }) {
     let query = supabase
-      .from('profiles')
+      .from('kk_profiles')
       .select('*', { count: 'exact' });
 
     // 1. Apply Filters
@@ -127,19 +127,19 @@ export const MydoService = {
   },
 
   async createProfile(profileData) {
-    const { data, error } = await supabase.from('profiles').insert([profileData]).select();
+    const { data, error } = await supabase.from('kk_profiles').insert([profileData]).select();
     if (error) throw error;
     return data;
   },
 
   async updateProfile(id, profileData) {
-    const { data, error } = await supabase.from('profiles').update(profileData).eq('id', id).select();
+    const { data, error } = await supabase.from('kk_profiles').update(profileData).eq('id', id).select();
     if (error) throw error;
     return data;
   },
 
   async deleteProfile(id) {
-    const { error } = await supabase.from('profiles').delete().eq('id', id);
+    const { error } = await supabase.from('kk_profiles').delete().eq('id', id);
     if (error) throw error;
     return true;
   }
