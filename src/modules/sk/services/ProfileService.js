@@ -1,5 +1,5 @@
 import { supabase } from '../../../lib/supabase'; // Adjust the path as needed
-import { INITIAL_FORM_STATE } from '../../sk-system/data/Form_Constants';
+import { INITIAL_FORM_STATE } from '../data/Form_Constants';
 
 // The name of your table in Supabase
 const TABLE_NAME = 'profiles'; 

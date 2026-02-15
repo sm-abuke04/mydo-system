@@ -8,7 +8,7 @@ import {
   WORK_STATUS_OPTIONS,
   EDUCATIONAL_BACKGROUND_OPTIONS,
   INITIAL_FORM_STATE
-} from "../../sk-system/data/Form_Constants";
+} from "../data/Form_Constants";
 
 export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);

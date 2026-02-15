@@ -38,7 +38,7 @@ export const INITIAL_FORM_STATE = {
   middleName: '',
   lastName: '',
   suffix: '',
-  region: 'Eastern Visayas',
+  region: 'VIII - Eastern Visayas',
   province: 'Northern Samar',
   cityMunicipality: 'Catarman',
   barangay: '',
