@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { MydoService } from "../mydo/services/MYDOService";
-import { Barangays } from "../mydo/data/Barangays"; // Import static fallback
+import { BARANGAYS } from "../mydo/data/Barangays"; // Import static fallback
 
 export default function RequestAccountModal({ isOpen, onClose }) {
   const [step, setStep] = useState(1);
@@ -35,11 +35,11 @@ export default function RequestAccountModal({ isOpen, onClose }) {
         setBarangays(data);
       } else {
         // Fallback to static data if DB is empty
-        setBarangays(Barangays.map((b, idx) => ({ id: idx, name: b.name })));
+        setBarangays(BARANGAYS.map((b, idx) => ({ id: idx, name: b.name })));
       }
     } catch (err) {
       console.error("Failed to load barangays, using static data");
-      setBarangays(Barangays.map((b, idx) => ({ id: idx, name: b.name })));
+      setBarangays(BARANGAYS.map((b, idx) => ({ id: idx, name: b.name })));
     }
   };
 
