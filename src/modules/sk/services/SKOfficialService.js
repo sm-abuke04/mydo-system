@@ -11,6 +11,7 @@ const mapToCamelCase = (dbData) => {
     position: dbData.position || '',
     birthdate: dbData.birthdate || '',
     age: dbData.age || '',
+    gender: dbData.gender || 'Male', // Added gender
     status: dbData.status || 'Active',
     barangay: dbData.barangay || ''
   };
@@ -24,6 +25,7 @@ const mapToSnakeCase = (formData) => {
     position: formData.position,
     birthdate: formData.birthdate,
     age: formData.age ? parseInt(formData.age) : null,
+    gender: formData.gender, // Added gender
     status: formData.status,
     // barangay: formData.barangay // If we add barangay field later
   };
