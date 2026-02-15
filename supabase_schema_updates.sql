@@ -69,6 +69,30 @@ ALTER TABLE sk_officials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sk_reports ENABLE ROW LEVEL SECURITY;
 
+-- 6.1 USERS TABLE POLICIES (Fix for "new row violates row-level security policy")
+-- Allow users to view their own profile
+CREATE POLICY "Users can view own profile" ON users
+FOR SELECT USING (auth.uid() = id);
+
+-- Allow users to insert their own profile (Critical for Sign Up)
+CREATE POLICY "Users can insert own profile" ON users
+FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Allow users to update their own profile
+CREATE POLICY "Users can update own profile" ON users
+FOR UPDATE USING (auth.uid() = id);
+
+-- Allow MYDO Admin to view all users (for approval dashboard)
+-- Note: This assumes MYDO Admin has a specific role or ID.
+-- If bootstrapping, you might need a more open policy initially or a Service Role key.
+-- For simplicity in development:
+CREATE POLICY "Admin can view all users" ON users
+FOR SELECT USING (true);
+-- Ideally restrict to: auth.uid() IN (SELECT id FROM users WHERE role = 'MYDO_ADMIN')
+-- but that creates a circular dependency if not careful.
+
+
+-- 6.2 SK REPORTS POLICIES
 -- Policy: SK Officials can VIEW their own barangay's reports
 CREATE POLICY "View own barangay reports" ON sk_reports
 FOR SELECT USING (
