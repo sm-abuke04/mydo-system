@@ -7,12 +7,9 @@ export const MydoService = {
       // Parallel requests for faster loading
       const [totalYouth, employed, outOfSchool, activePuroks] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        // Fix: Use correct column 'work_status' instead of 'employment_status'
         supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('work_status', 'Employed'),
-        // Fix: Use correct column 'youth_classification' (array) and 'cs' (contains) filter for "Out of School Youth"
-        // Note: PostgREST syntax for array contains is .cs.{value}
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).cs('youth_classification', '{"Out of School Youth"}'),
-        // Fix: Query 'barangays' table (if exists) or 'users' with active barangays
+        // Fix: Use correct method `.contains()` instead of `.cs()` for array containment
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).contains('youth_classification', ['Out of School Youth']),
         supabase.from('barangays').select('*', { count: 'exact', head: true })
       ]);
 
@@ -38,13 +35,12 @@ export const MydoService = {
   async getRecentActivities() {
     try {
         const { data, error } = await supabase
-        .from('audit_logs') // Changed from 'system_logs' to 'audit_logs' if that's the convention, or keep generic if not sure. Let's assume 'audit_logs' or return empty.
+        .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
 
         if (error) {
-            // If table doesn't exist, return empty array gracefully
             console.warn("Audit logs table not found or error:", error.message);
             return [];
         }
@@ -57,7 +53,7 @@ export const MydoService = {
   // 3. REPORTS MANAGEMENT
   async getReports(statusFilter = 'All', searchQuery = '', page = 1, itemsPerPage = 5) {
     let query = supabase
-      .from('sk_reports') // Changed from 'reports' to 'sk_reports' based on schema update
+      .from('sk_reports')
       .select('*', { count: 'exact' });
 
     // Apply Filters
@@ -66,7 +62,6 @@ export const MydoService = {
     }
 
     if (searchQuery) {
-      // Adjusted columns based on probable schema
       query = query.or(`name.ilike.%${searchQuery}%,barangay.ilike.%${searchQuery}%`);
     }
 
@@ -94,7 +89,6 @@ export const MydoService = {
   },
 
   async getAllBarangays() {
-    // Fetches all barangays for the Map and Dropdowns
     const { data, error } = await supabase
       .from('barangays')
       .select('*')
@@ -112,10 +106,8 @@ export const MydoService = {
 
     // 1. Apply Filters
     if (barangay) query = query.eq('barangay', barangay);
-    // status column in profiles isn't standard, usually 'work_status' or 'civil_status'.
-    // If 'status' refers to 'Active/Inactive', ensure column exists. Assuming it's not strictly used yet.
     if (status !== 'All' && status) query = query.eq('status', status);
-    if (gender !== 'All') query = query.eq('sex', gender); // 'sex' is the column name in ProfileService
+    if (gender !== 'All') query = query.eq('sex', gender);
     
     // 2. Apply Search (Check First/Last Name or SKMT ID)
     if (search) {

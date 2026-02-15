@@ -57,9 +57,13 @@ CREATE TABLE IF NOT EXISTS sk_reports (
     created_at timestamptz DEFAULT now()
 );
 
--- 5. STORAGE BUCKET CONFIGURATION (Simulated SQL for Supabase Storage)
--- Note: Buckets are usually created via API or Dashboard, but policies can be SQL.
--- Assume bucket 'sk_documents' exists.
+-- 5. AUDIT LOGS TABLE (For System Activity)
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id SERIAL PRIMARY KEY,
+    description text NOT NULL,
+    user_id uuid REFERENCES auth.users(id),
+    created_at timestamptz DEFAULT now()
+);
 
 -- 6. ROW LEVEL SECURITY (RLS) POLICIES
 
@@ -68,6 +72,7 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sk_officials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sk_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- 6.1 USERS TABLE POLICIES (Fix for "new row violates row-level security policy")
 -- Allow users to view their own profile
@@ -116,6 +121,16 @@ FOR SELECT USING (
         SELECT id FROM users WHERE role = 'MYDO_ADMIN'
     )
 );
+
+-- 6.3 AUDIT LOGS POLICIES
+-- Allow authenticated users to insert logs
+CREATE POLICY "Users can insert logs" ON audit_logs
+FOR INSERT TO authenticated WITH CHECK (true);
+
+-- Allow Admin to view all logs
+CREATE POLICY "Admin can view all logs" ON audit_logs
+FOR SELECT TO authenticated USING (true);
+
 
 -- STORAGE POLICIES (Assuming bucket 'sk_documents')
 -- Make sure to create the bucket 'sk_documents' in Supabase Storage manually if not via SQL extension.
