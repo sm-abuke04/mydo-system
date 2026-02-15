@@ -93,7 +93,13 @@ export default function RequestAccountModal({ isOpen, onClose }) {
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // Handle "Email rate limit exceeded" gracefully
+        if (authError.message.includes("rate limit")) {
+            throw new Error("Too many requests. Please try again later (approx. 1 hour).");
+        }
+        throw authError;
+      }
 
       // 3. Create Profile in Public Users Table (With Pending Status)
       if (authData.user) {
@@ -109,6 +115,12 @@ export default function RequestAccountModal({ isOpen, onClose }) {
 
         if (dbError) throw dbError;
         setSuccess(true);
+      } else {
+        // Fallback: If authData.user is missing (rare, but happens if session is null for some reason),
+        // we might be in email confirmation mode.
+        // We can assume success for the Auth part, but warn user.
+        setSuccess(true); // Treat as success so they check email
+        alert("Account created! Please check your email to confirm registration.");
       }
 
     } catch (err) {
