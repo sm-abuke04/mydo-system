@@ -425,9 +425,6 @@ export default function PrintableReport({ profiles }) {
           </table>
         </div>
 
-        <div className="print:break-before-page"></div>
-
-
         {/* SIGNATORIES */}
         <div className="mt-8 break-inside-avoid">
            <p className="mb-4 text-sm">I HEREBY CERTIFY that the information provided in this form is complete, true and correct to the best of my knowledge.</p>
