@@ -427,62 +427,6 @@ export default function PrintableReport({ profiles }) {
 
         <div className="print:break-before-page"></div>
 
-        {/* X. & XI. VOTER STATUS */}
-        <div className="grid grid-cols-2 gap-4 mb-6 break-inside-avoid">
-          <div>
-             <h3 className="font-bold uppercase mb-1 font-sans text-xs">REGISTERED SK VOTER</h3>
-             <table className="w-full border-collapse border border-black text-center text-xs">
-               <thead>
-                 <tr className="bg-gray-100 print:bg-gray-100">
-                   <th className="border border-black px-2 py-1 text-left">AGE GROUP</th>
-                   <th className="border border-black">Registered</th>
-                   <th className="border border-black">Not Registered</th>
-                 </tr>
-               </thead>
-               <tbody>
-                  {ageGroups.map(group => (
-                    <tr key={group.label}>
-                      <td className="border border-black px-2 py-1 text-left">{group.label}</td>
-                      <td className="border border-black">{countAttr('isSkVoter', true, group.min, group.max)}</td>
-                      <td className="border border-black">{countAttr('isSkVoter', false, group.min, group.max)}</td>
-                    </tr>
-                  ))}
-                   <tr className="bg-gray-200 print:bg-gray-200 font-bold">
-                      <td className="border border-black px-2 py-1 text-left">TOTAL</td>
-                      <td className="border border-black">{profiles.filter(p => p.isSkVoter === true).length}</td>
-                      <td className="border border-black">{profiles.filter(p => p.isSkVoter !== true).length}</td>
-                   </tr>
-               </tbody>
-             </table>
-          </div>
-
-          <div>
-             <h3 className="font-bold uppercase mb-1 font-sans text-xs">REGISTERED REGULAR VOTER</h3>
-             <table className="w-full border-collapse border border-black text-center text-xs">
-               <thead>
-                 <tr className="bg-gray-100 print:bg-gray-100">
-                   <th className="border border-black px-2 py-1 text-left">AGE GROUP</th>
-                   <th className="border border-black">Registered</th>
-                   <th className="border border-black">Not Registered</th>
-                 </tr>
-               </thead>
-               <tbody>
-                  {ageGroups.slice(1).map(group => ( // Skip 15-17 for national voters usually
-                    <tr key={group.label}>
-                      <td className="border border-black px-2 py-1 text-left">{group.label}</td>
-                      <td className="border border-black">{countAttr('isNationalVoter', true, group.min, group.max)}</td>
-                      <td className="border border-black">{countAttr('isNationalVoter', false, group.min, group.max)}</td>
-                    </tr>
-                  ))}
-                   <tr className="bg-gray-200 print:bg-gray-200 font-bold">
-                      <td className="border border-black px-2 py-1 text-left">TOTAL</td>
-                      <td className="border border-black">{profiles.filter(p => p.isNationalVoter === true).length}</td>
-                      <td className="border border-black">{profiles.filter(p => p.isNationalVoter !== true).length}</td>
-                   </tr>
-               </tbody>
-             </table>
-          </div>
-        </div>
 
         {/* SIGNATORIES */}
         <div className="mt-8 break-inside-avoid">
