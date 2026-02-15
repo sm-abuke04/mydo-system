@@ -44,11 +44,56 @@ ADD COLUMN IF NOT EXISTS lat float8,
 ADD COLUMN IF NOT EXISTS lng float8;
 
 
--- 4. OPTIONAL: ENABLE ROW LEVEL SECURITY (RLS)
+-- 4. SK REPORTS TABLE (New Table for Tracking Submissions)
+CREATE TABLE IF NOT EXISTS sk_reports (
+    id SERIAL PRIMARY KEY,
+    name text NOT NULL,
+    category text NOT NULL, -- 'Annual Requirements', 'Quarterly Requirements', 'Monthly Requirements'
+    status text DEFAULT 'Pending', -- 'Pending', 'Submitted', 'In Progress'
+    submitted_at timestamptz,
+    file_path text,
+    barangay text, -- Links report to a specific barangay
+    user_id uuid REFERENCES auth.users(id), -- Tracks who submitted it
+    created_at timestamptz DEFAULT now()
+);
+
+-- 5. STORAGE BUCKET CONFIGURATION (Simulated SQL for Supabase Storage)
+-- Note: Buckets are usually created via API or Dashboard, but policies can be SQL.
+-- Assume bucket 'sk_documents' exists.
+
+-- 6. ROW LEVEL SECURITY (RLS) POLICIES
+
+-- Enable RLS on all tables
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sk_officials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sk_reports ENABLE ROW LEVEL SECURITY;
 
--- 5. POLICIES
--- Add simple policies if they don't exist (basic idempotent check via DO block not shown for brevity, errors here are usually non-blocking)
--- CREATE POLICY ...
+-- Policy: SK Officials can VIEW their own barangay's reports
+CREATE POLICY "View own barangay reports" ON sk_reports
+FOR SELECT USING (
+    auth.uid() IN (
+        SELECT id FROM users WHERE barangay = sk_reports.barangay
+    )
+);
+
+-- Policy: SK Officials can INSERT/UPDATE reports for their barangay
+CREATE POLICY "Manage own barangay reports" ON sk_reports
+FOR ALL USING (
+    auth.uid() IN (
+        SELECT id FROM users WHERE barangay = sk_reports.barangay
+    )
+);
+
+-- Policy: MYDO Admin can VIEW ALL reports
+CREATE POLICY "Admin view all reports" ON sk_reports
+FOR SELECT USING (
+    auth.uid() IN (
+        SELECT id FROM users WHERE role = 'MYDO_ADMIN'
+    )
+);
+
+-- STORAGE POLICIES (Assuming bucket 'sk_documents')
+-- Make sure to create the bucket 'sk_documents' in Supabase Storage manually if not via SQL extension.
+-- CREATE POLICY "Give authenticated users access to upload" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'sk_documents');
+-- CREATE POLICY "Give authenticated users access to read" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'sk_documents');
