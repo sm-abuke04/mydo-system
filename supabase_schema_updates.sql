@@ -93,8 +93,11 @@ FOR UPDATE USING (auth.uid() = id);
 -- For simplicity in development:
 CREATE POLICY "Admin can view all users" ON users
 FOR SELECT USING (true);
--- Ideally restrict to: auth.uid() IN (SELECT id FROM users WHERE role = 'MYDO_ADMIN')
--- but that creates a circular dependency if not careful.
+
+-- CRITICAL FIX: Allow Admin to UPDATE user status (Approve/Reject)
+CREATE POLICY "Admin can update users" ON users
+FOR UPDATE USING (true);
+-- In production, restrict this to: USING (auth.uid() IN (SELECT id FROM users WHERE role = 'MYDO_ADMIN'))
 
 
 -- 6.2 SK REPORTS POLICIES
