@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Save, X, Loader2, ArrowLeft } from "lucide-react";
 import { ProfileService } from "../services/ProfileService";
+import { useAuth } from "@/context/AuthContext";
 import {
   CIVIL_STATUS_OPTIONS,
   YOUTH_CLASSIFICATION_OPTIONS,
@@ -11,9 +12,17 @@ import {
 } from "../../sk-system/data/Form_Constants";
 
 export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // AUTO-POPULATE BARANGAY ON MOUNT (New Record)
+  useEffect(() => {
+    if (!id && user?.barangay) {
+      setFormData(prev => ({ ...prev, barangay: user.barangay }));
+    }
+  }, [user, id]);
 
   // FETCH DATA IF EDITING
   useEffect(() => {
@@ -33,8 +42,6 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
         }
       };
       fetchProfile();
-    } else {
-        setFormData(INITIAL_FORM_STATE);
     }
   }, [id]);
 
@@ -91,6 +98,7 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
         await ProfileService.create(formData);
         alert("New Profile Created!");
       }
+      // Ensure this triggers the refresh in parent
       if (onSaveSuccess) onSaveSuccess();
     } catch (error) {
       console.error(error);
@@ -131,7 +139,7 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
 
       <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* SECTION 1: LOCATION (Matches columns 2-5: Region, Province, City, Barangay) */}
+        {/* SECTION 1: LOCATION */}
         <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
            <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">I. Location Information</h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -149,12 +157,24 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
              </div>
              <div className="space-y-1">
                <label className="text-xs font-bold text-[#7BA4D0] uppercase">Barangay</label>
-               <input required name="barangay" value={formData.barangay} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
+               {/* Read-Only Barangay populated from User Auth */}
+               <input
+                 required
+                 name="barangay"
+                 value={formData.barangay}
+                 readOnly
+                 className="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white cursor-not-allowed"
+               />
+             </div>
+             {/* Purok/Zone Moved Here */}
+             <div className="space-y-1 md:col-span-2">
+               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Purok / Zone (Home Address)</label>
+               <input required name="purokZone" value={formData.purokZone} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white focus:ring-2 focus:ring-[#2E5E99]" placeholder="e.g. Purok 1" />
              </div>
            </div>
         </div>
 
-        {/* SECTION 2: PERSONAL INFO (Matches Name, Age, Birthday, Sex, Civil Status) */}
+        {/* SECTION 2: PERSONAL INFO */}
         <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
           <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">II. Personal Information</h3>
 
@@ -211,7 +231,7 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
           </div>
         </div>
 
-        {/* SECTION 3: DEMOGRAPHICS (Matches Youth Class, Age Group, Educ, Work) */}
+        {/* SECTION 3: DEMOGRAPHICS */}
         <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
            <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">III. Demographic Information</h3>
 
@@ -270,7 +290,7 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
            </div>
         </div>
 
-        {/* SECTION 4: CONTACT & PUROK (Matches Email, Contact, Home Address) */}
+        {/* SECTION 4: CONTACT (Matches Email, Contact) */}
         <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
            <h3 className="text-sm font-black text-[#2E5E99] dark:text-blue-400 uppercase tracking-widest mb-4">IV. Contact Information</h3>
 
@@ -283,42 +303,10 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
                 <label className="text-xs font-bold text-[#7BA4D0] uppercase">Contact Number</label>
                 <input type="tel" name="contact" value={formData.contact} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold text-[#0D2440] dark:text-white focus:ring-2 focus:ring-[#2E5E99]" />
              </div>
-             <div className="space-y-1 md:col-span-2">
-               <label className="text-xs font-bold text-[#7BA4D0] uppercase">Purok / Zone (Home Address)</label>
-               <input name="purokZone" value={formData.purokZone} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white" />
-             </div>
            </div>
         </div>
 
-        <div className="flex gap-8 mt-6">
-            <label className="flex items-center gap-3 cursor-pointer p-3 bg-white dark:bg-gray-800 rounded-xl border border-[#E7F0FA] dark:border-gray-600 w-full hover:border-[#2E5E99] transition-all">
-                <input
-                    type="checkbox"
-                    name="isSkVoter"
-                    checked={formData.isSkVoter}
-                    onChange={handleChange}
-                    className="w-5 h-5 text-[#2E5E99] rounded border-gray-300 focus:ring-[#2E5E99]"
-                />
-                <div className="flex flex-col">
-                    <span className="text-sm font-bold text-[#0D2440] dark:text-white">Registered SK Voter?</span>
-                    <span className="text-xs text-[#7BA4D0]">Check if yes</span>
-                </div>
-            </label>
-
-            <label className="flex items-center gap-3 cursor-pointer p-3 bg-white dark:bg-gray-800 rounded-xl border border-[#E7F0FA] dark:border-gray-600 w-full hover:border-[#2E5E99] transition-all">
-                <input
-                    type="checkbox"
-                    name="isNationalVoter"
-                    checked={formData.isNationalVoter}
-                    onChange={handleChange}
-                    className="w-5 h-5 text-[#2E5E99] rounded border-gray-300 focus:ring-[#2E5E99]"
-                />
-                <div className="flex flex-col">
-                    <span className="text-sm font-bold text-[#0D2440] dark:text-white">Registered National Voter?</span>
-                    <span className="text-xs text-[#7BA4D0]">Check if yes</span>
-                </div>
-            </label>
-        </div>
+        {/* REMOVED VOTER QUESTIONS HERE */}
 
         {/* FOOTER ACTIONS */}
         <div className="pt-6 flex justify-end gap-3">
