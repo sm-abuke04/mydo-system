@@ -138,6 +138,72 @@ FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Admin can view all logs" ON audit_logs
 FOR SELECT TO authenticated USING (true);
 
+-- 6.4 KK PROFILES POLICIES (Critical for Youth Registry)
+-- Allow SK Officials to VIEW profiles in their barangay
+CREATE POLICY "SK View Barangay Profiles" ON kk_profiles
+FOR SELECT USING (
+    auth.uid() IN (
+        SELECT id FROM users WHERE barangay = kk_profiles.barangay
+    )
+);
+
+-- Allow SK Officials to INSERT profiles for their barangay
+CREATE POLICY "SK Insert Barangay Profiles" ON kk_profiles
+FOR INSERT WITH CHECK (
+    auth.uid() IN (
+        SELECT id FROM users WHERE barangay = kk_profiles.barangay
+    )
+);
+
+-- Allow SK Officials to UPDATE profiles in their barangay
+CREATE POLICY "SK Update Barangay Profiles" ON kk_profiles
+FOR UPDATE USING (
+    auth.uid() IN (
+        SELECT id FROM users WHERE barangay = kk_profiles.barangay
+    )
+);
+
+-- Allow SK Officials to DELETE profiles in their barangay
+CREATE POLICY "SK Delete Barangay Profiles" ON kk_profiles
+FOR DELETE USING (
+    auth.uid() IN (
+        SELECT id FROM users WHERE barangay = kk_profiles.barangay
+    )
+);
+
+-- Allow MYDO Admin to VIEW ALL profiles
+CREATE POLICY "Admin View All Profiles" ON kk_profiles
+FOR SELECT USING (
+    auth.uid() IN (
+        SELECT id FROM users WHERE role = 'MYDO_ADMIN'
+    )
+);
+
+-- 6.5 SK OFFICIALS POLICIES (Critical for SK Officials Management)
+-- Allow SK Officials to VIEW their barangay's officials
+CREATE POLICY "SK View Barangay Officials" ON sk_officials
+FOR SELECT USING (
+    auth.uid() IN (
+        SELECT id FROM users WHERE barangay = sk_officials.barangay
+    )
+);
+
+-- Allow SK Chairperson to MANAGE (Insert/Update/Delete) their barangay's officials
+CREATE POLICY "SK Chair Manage Officials" ON sk_officials
+FOR ALL USING (
+    auth.uid() IN (
+        SELECT id FROM users WHERE barangay = sk_officials.barangay AND role = 'SK_CHAIR'
+    )
+);
+
+-- Allow MYDO Admin to VIEW ALL officials
+CREATE POLICY "Admin View All Officials" ON sk_officials
+FOR SELECT USING (
+    auth.uid() IN (
+        SELECT id FROM users WHERE role = 'MYDO_ADMIN'
+    )
+);
+
 
 -- STORAGE POLICIES (Assuming bucket 'sk_documents')
 -- Make sure to create the bucket 'sk_documents' in Supabase Storage manually if not via SQL extension.
