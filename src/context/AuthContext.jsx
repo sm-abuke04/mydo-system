@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 const AuthContext = createContext();
@@ -6,57 +6,90 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const fetchingRef = useRef(false); // Ref to prevent simultaneous fetches
 
   // Helper: Fetch Role & Check Status
   const fetchUserRole = async (authUser) => {
+    if (!authUser || fetchingRef.current) return;
+
+    fetchingRef.current = true;
+    console.log("AuthContext: Fetching profile for", authUser.email);
+
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', authUser.id)
         .single();
 
+      if (error) {
+        console.error("AuthContext: Error fetching profile:", error);
+        // If RLS prevents access or row missing, treat as error
+        throw new Error("Profile fetch failed: " + error.message);
+      }
+
       if (data) {
+        console.log("AuthContext: Profile found:", data);
+
         // ENFORCE PENDING CHECK
         if (data.status === 'Pending') {
-           // If pending, do not set user state (keeps them logged out in UI)
-           // But strictly speaking we should sign them out from Supabase too
+           console.warn("AuthContext: Account is pending.");
            await supabase.auth.signOut();
-           throw new Error("Account Pending");
+           throw new Error("Account Pending Approval");
         }
-        setUser({ ...authUser, ...data });
+
+        // Merge: DB data overrides Auth data (e.g. role)
+        const enrichedUser = { ...authUser, ...data };
+
+        // Ensure role is present (fallback if missing in DB, though schema says it exists)
+        if (!enrichedUser.role) {
+            console.warn("AuthContext: User has no role!", enrichedUser);
+        }
+
+        setUser(enrichedUser);
+        return { user: enrichedUser };
       } else {
-        // If authenticated in Supabase Auth but no profile in 'users' table
-        // We must consider this an error because the app relies on 'role'
-        console.warn("User authenticated but no profile found in 'users' table.");
+        console.warn("AuthContext: No profile data returned.");
         await supabase.auth.signOut();
         setUser(null);
-        throw new Error("Profile not found. Please contact administrator.");
+        throw new Error("Profile not found.");
       }
     } catch (err) {
-      console.error("Error fetching user role:", err);
-      // If error (like Pending or Profile Missing), force logout state
+      console.error("AuthContext Error:", err);
       setUser(null); 
       return { error: err };
     } finally {
+      fetchingRef.current = false;
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await fetchUserRole(session.user);
-      } else {
-        setLoading(false);
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user && mounted) {
+           await fetchUserRole(session.user);
+        } else if (mounted) {
+           setLoading(false);
+        }
+      } catch (error) {
+        console.error("Session check failed", error);
+        if (mounted) setLoading(false);
       }
     };
-    checkSession();
+
+    initializeAuth();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // console.log("Auth Event:", event);
       if (event === 'SIGNED_IN' && session?.user) {
-        await fetchUserRole(session.user);
+        // Only fetch if we are not already fetching (handled by ref)
+        if (!fetchingRef.current) {
+            await fetchUserRole(session.user);
+        }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setLoading(false);
@@ -64,6 +97,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => {
+      mounted = false;
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -77,13 +111,15 @@ export const AuthProvider = ({ children }) => {
 
     if (error) return { error };
 
-    // 2. Fetch Profile & Check Status
+    // 2. Fetch Profile Immediately (Bypass onAuthStateChange delay)
+    // We force a fetch here because Login component needs the result now
+    // Reset fetching ref to allow this explicit call
+    fetchingRef.current = false;
     const roleCheck = await fetchUserRole(data.user);
     
-    // If fetchUserRole returned an error (like "Account Pending"), pass it up
     if (roleCheck?.error) return { error: roleCheck.error };
 
-    return { user: data.user };
+    return { user: roleCheck.user };
   };
 
   const logout = async () => {

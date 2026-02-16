@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Lock, User, Shield } from "lucide-react";
 import mydoLogo from "@/assets/mydo logo.png";
-import RequestAccountModal from "./RequestAccountModal"; // Import the modal
+import RequestAccountModal from "./RequestAccountModal";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -11,7 +11,6 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   
-  // Modal State
   const [isRequestOpen, setIsRequestOpen] = useState(false);
 
   const { login } = useAuth();
@@ -23,27 +22,31 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { user, error: loginError } = await login(username, password);
+      const { user, error: loginError } = await login(username.trim(), password.trim());
       
       if (loginError) throw loginError;
+
+      if (!user) throw new Error("No user returned from login.");
+
+      console.log("Login Successful. User Role:", user.role);
 
       // Role Based Redirect
       if (user.role === "MYDO_ADMIN") {
         navigate("/mydo/dashboard");
       } else if (["SK_CHAIR", "SK_SEC"].includes(user.role)) {
-        // Pending Check is handled in AuthContext, but we can double check here
         if (user.status === 'Pending') {
-          setError("Your account is pending approval from MYDO Admin.");
+          setError("Your account is pending approval.");
           return;
         }
         navigate("/sk/dashboard");
       } else {
-        setError("Unauthorized role.");
+        console.error("Unauthorized Role Debug:", user);
+        setError(`Unauthorized role: ${user.role || 'None'}`);
       }
 
     } catch (err) {
-      console.error(err);
-      if (err.message.includes("Pending")) {
+      console.error("Login Error:", err);
+      if (err.message && err.message.includes("Pending")) {
         setError("Your account is pending approval.");
       } else {
         setError("Invalid email or password.");
