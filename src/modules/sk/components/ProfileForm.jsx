@@ -45,7 +45,7 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
     }
   }, [id]);
 
-  // AGE CALCULATION EFFECT
+  // AGE & YOUTH GROUP CALCULATION EFFECT
   useEffect(() => {
     if (formData.birthday) {
       const birthDate = new Date(formData.birthday);
@@ -59,6 +59,14 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
       if (formData.age !== age) {
         setFormData(prev => {
           const updates = { ...prev, age };
+
+          // Auto-calculate Youth Age Group
+          if (age >= 15 && age <= 17) updates.youthAgeGroup = "Child Youth (15-17 yrs old)";
+          else if (age >= 18 && age <= 24) updates.youthAgeGroup = "Core Youth (18-24 yrs old)";
+          else if (age >= 25 && age <= 30) updates.youthAgeGroup = "Young Adult (25-30 yrs old)";
+          else updates.youthAgeGroup = ""; // Or keep existing if outside range? usually reset.
+
+          // Reset Work Status if under 18
           if (age < 18) {
             updates.workStatus = "";
           }
@@ -238,10 +246,14 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
              <div className="space-y-1">
                <label className="text-xs font-bold text-[#7BA4D0] uppercase">Youth Age Group</label>
-               <select name="youthAgeGroup" value={formData.youthAgeGroup} onChange={handleChange} className="w-full p-3 bg-white dark:bg-gray-800 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white">
-                  <option value="">Select Age Group</option>
-                  {YOUTH_AGE_GROUP_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-               </select>
+               {/* Read-Only Auto-Populated */}
+               <input
+                 name="youthAgeGroup"
+                 value={formData.youthAgeGroup}
+                 readOnly
+                 className="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-[#E7F0FA] dark:border-gray-600 rounded-lg text-sm font-bold dark:text-white cursor-not-allowed"
+                 placeholder="Auto-selected based on age"
+               />
              </div>
              <div className="space-y-1">
                <label className="text-xs font-bold text-[#7BA4D0] uppercase">Highest Educational Attainment</label>
@@ -305,8 +317,6 @@ export default function ProfileForm({ id, onCancel, onSaveSuccess }) {
              </div>
            </div>
         </div>
-
-        {/* REMOVED VOTER QUESTIONS HERE */}
 
         {/* FOOTER ACTIONS */}
         <div className="pt-6 flex justify-end gap-3">
