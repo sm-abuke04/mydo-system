@@ -82,9 +82,33 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
   const displayArray = (arr) => Array.isArray(arr) ? arr.join(", ") : arr;
 
   // --- TABLE COLUMNS CONFIG ---
+  // Sticky Columns Logic:
+  // "NO." (Index 0) -> Left 0
+  // "NAME" (Index 1) -> Left 48px (width of NO.)
+  // "ACTION" -> Right 0
   const columns = [
-    { header: "NO.", accessor: (p, idx) => (currentPage - 1) * itemsPerPage + idx + 1, width: "w-12 text-center" },
-    { header: "NAME", accessor: (p) => formatName(p), width: "w-64 font-bold" },
+    {
+        header: "NO.",
+        accessor: (p, idx) => (currentPage - 1) * itemsPerPage + idx + 1,
+        width: "w-12 text-center",
+        sticky: "left-0 z-20"
+    },
+    {
+        header: "NAME",
+        accessor: (p) => formatName(p),
+        width: "w-64 font-bold",
+        sticky: "left-12 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.3)]" // Add shadow to indicate scroll
+    },
+    // New Columns Requested
+    { header: "REGION", accessor: "region", width: "w-32" },
+    { header: "PROVINCE", accessor: "province", width: "w-32" },
+    { header: "CITY/MUN.", accessor: "cityMunicipality", width: "w-32" },
+    { header: "BARANGAY", accessor: "barangay", width: "w-32" },
+    { header: "PUROK/ZONE", accessor: "purokZone", width: "w-32" },
+    { header: "AGE", accessor: "age", width: "w-16" },
+    { header: "BIRTHDAY", accessor: "birthday", width: "w-32" },
+    { header: "SEX", accessor: "sex", width: "w-24" },
+
     { header: "CIVIL STATUS", accessor: (p) => (p.civilStatus || "").toUpperCase(), width: "w-32" },
     { header: "YOUTH CLASS", accessor: (p) => displayArray(p.youthClassification), width: "w-40" },
     { header: "AGE GROUP", accessor: "youthAgeGroup", width: "w-40" },
@@ -101,7 +125,7 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
       <div className="p-4 border-b border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#1a1d21]">
         {/* Filters Panel (Collapsible) */}
         {showFilters && (
-          <div className="absolute top-20 left-4 right-4 z-20 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-4 gap-4 animate-in fade-in zoom-in duration-200">
+          <div className="absolute top-20 left-4 right-4 z-30 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-4 gap-4 animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between md:hidden col-span-1">
                <h3 className="font-bold">Filters</h3>
                <button onClick={() => setShowFilters(false)}><X size={16}/></button>
@@ -157,8 +181,6 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
         )}
 
         {/* Start of Toolbar Content */}
-        {/* Note: I'm trying to match the dark aesthetic from image, but keeping component flexible */}
-
         <div className="flex items-center gap-2">
             {/* Can show record count if needed, but image shows it in header */}
         </div>
@@ -187,20 +209,23 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
       {/* TABLE */}
       <div className="flex-1 overflow-auto relative bg-[#1a1d21]">
         {isLoading && (
-            <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50 z-30 flex items-center justify-center">
                 <Loader2 className="animate-spin text-blue-500" size={32} />
             </div>
         )}
 
         <table className="w-full text-left border-collapse whitespace-nowrap">
-          <thead className="bg-[#1a1d21] sticky top-0 z-10">
+          <thead className="bg-[#1a1d21] sticky top-0 z-20">
             <tr>
               {columns.map((col, idx) => (
-                <th key={idx} className="px-4 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-800">
+                <th
+                    key={idx}
+                    className={`px-4 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-800 bg-[#1a1d21] ${col.sticky || ''}`}
+                >
                     {col.header}
                 </th>
               ))}
-              <th className="px-4 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-right sticky right-0 bg-[#1a1d21] border-b border-gray-800 shadow-xl">
+              <th className="px-4 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-right sticky right-0 z-20 bg-[#1a1d21] border-b border-gray-800 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.3)]">
                 ACTION
               </th>
             </tr>
@@ -210,23 +235,17 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
               paginatedProfiles.map((profile, idx) => (
                 <tr key={profile.id} className="hover:bg-[#25282c] transition-colors group">
                   {columns.map((col, colIdx) => (
-                    <td key={colIdx} className={`px-4 py-4 text-xs font-medium text-gray-300 ${col.width || ''}`}>
+                    <td
+                        key={colIdx}
+                        className={`px-4 py-4 text-xs font-medium text-gray-300 bg-[#1a1d21] group-hover:bg-[#25282c] ${col.width || ''} ${col.sticky || ''}`}
+                    >
                         {typeof col.accessor === 'function' ? col.accessor(profile, idx) : (profile[col.accessor] || "---")}
                     </td>
                   ))}
 
                   {/* ACTIONS COLUMN (Sticky Right) */}
-                  <td className="px-4 py-3 text-right sticky right-0 bg-[#1a1d21] group-hover:bg-[#25282c] transition-colors border-l border-gray-800 shadow-xl">
+                  <td className="px-4 py-3 text-right sticky right-0 z-10 bg-[#1a1d21] group-hover:bg-[#25282c] transition-colors border-l border-gray-800 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.3)]">
                     <div className="flex items-center justify-end gap-1">
-                      {/* Simplified Actions ... */}
-                       <div className="group/action relative">
-                            <button className="text-gray-500 hover:text-white p-1 rounded-full hover:bg-gray-700">
-                                <MoreHorizontal size={16} />
-                            </button>
-                            {/* Dropdown would go here, but for now specific buttons are better for UX unless strictly requested to hide them */}
-                       </div>
-
-                       {/* Explicit Actions (Keeping functional as before, but styled minimally) */}
                        <button
                         onClick={() => onEdit && onEdit(profile.id)}
                         className="p-1.5 text-blue-400 hover:bg-blue-900/30 rounded-lg transition-colors"
@@ -264,7 +283,6 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
           Showing {paginatedProfiles.length} of {filteredProfiles.length} records
         </p>
 
-        {/* Pagination Bar from Image (Line style) - approximating with standard buttons for now as image is vague on interactive elements */}
         <div className="flex gap-1">
           <button 
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
@@ -273,7 +291,6 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          {/* Page Indicators */}
           <div className="w-32 h-1 bg-gray-700 rounded-full self-center relative overflow-hidden">
              <div
                className="absolute top-0 left-0 h-full bg-gray-400 transition-all duration-300"
