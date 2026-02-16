@@ -1,21 +1,50 @@
 import React, { useState } from "react";
 import {
-  Search, Edit, Trash2, ChevronLeft, ChevronRight, Filter, Loader2
+  Search, Edit, Trash2, ChevronLeft, ChevronRight, Filter, Loader2, MoreHorizontal, X
 } from "lucide-react";
 import { ProfileService } from "../services/ProfileService";
 
 export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLoading }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Increased items per page for table view
+  const itemsPerPage = 10;
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // --- FILTERING ---
-  const filteredProfiles = profiles.filter((profile) => {
-    if (!profile) return false;
-    const searchString = `${profile.firstName || ""} ${profile.lastName || ""} ${profile.id || ""}`;
-    return searchString.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filters State
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    age: "",
+    sex: "",
+    purokZone: "",
+    birthday: ""
   });
+
+  const resetFilters = () => {
+    setFilters({ age: "", sex: "", purokZone: "", birthday: "" });
+    setShowFilters(false);
+  };
+
+  // --- FILTERING & SORTING ---
+  const filteredProfiles = profiles
+    .filter((profile) => {
+      if (!profile) return false;
+      const searchString = `${profile.firstName || ""} ${profile.lastName || ""} ${profile.id || ""}`;
+      const matchesSearch = searchString.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Apply Filters
+      const matchesAge = filters.age ? profile.age?.toString() === filters.age : true;
+      const matchesSex = filters.sex ? (profile.sex || "").toLowerCase() === filters.sex.toLowerCase() : true;
+      const matchesPurok = filters.purokZone ? (profile.purokZone || "").toLowerCase().includes(filters.purokZone.toLowerCase()) : true;
+      const matchesBirthday = filters.birthday ? profile.birthday === filters.birthday : true;
+
+      return matchesSearch && matchesAge && matchesSex && matchesPurok && matchesBirthday;
+    })
+    .sort((a, b) => {
+      // Mandatory Sort by Last Name ASC
+      const nameA = (a.lastName || "").toLowerCase();
+      const nameB = (b.lastName || "").toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
 
   // --- PAGINATION ---
   const totalPages = Math.ceil(filteredProfiles.length / itemsPerPage);
@@ -44,115 +73,183 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
     }
   };
 
+  // Helper for formatting name: Last, First, Suffix, Middle
+  const formatName = (p) => {
+     return `${p.lastName || ''}, ${p.firstName || ''}${p.suffix ? `, ${p.suffix}` : ''}${p.middleName ? `, ${p.middleName}` : ''}`;
+  };
+
   // Helper for arrays
   const displayArray = (arr) => Array.isArray(arr) ? arr.join(", ") : arr;
 
   // --- TABLE COLUMNS CONFIG ---
-  // Requested: Move Purok/Zone next to Barangay
   const columns = [
-    { header: "ID No.", accessor: "id", width: "w-16" },
-    { header: "Region", accessor: "region", width: "w-32" },
-    { header: "Province", accessor: "province", width: "w-32" },
-    { header: "City/Mun.", accessor: "cityMunicipality", width: "w-32" },
-    { header: "Barangay", accessor: "barangay", width: "w-32" },
-    { header: "Purok/Zone", accessor: "purokZone", width: "w-32" }, // MOVED HERE
-    { header: "Name", accessor: (p) => `${p.firstName} ${p.lastName}`, width: "w-48 font-bold" },
-    { header: "Age", accessor: "age", width: "w-16" },
-    { header: "Birthday", accessor: "birthday", width: "w-32" },
-    { header: "Sex", accessor: "sex", width: "w-24" },
-    { header: "Civil Status", accessor: "civilStatus", width: "w-32" },
-    { header: "Classification", accessor: (p) => displayArray(p.youthClassification), width: "w-48 text-xs" },
-    { header: "Age Group", accessor: "youthAgeGroup", width: "w-32 text-xs" },
-    { header: "Email", accessor: "email", width: "w-48 text-xs" },
-    { header: "Contact No.", accessor: "contact", width: "w-32" },
-    { header: "Education", accessor: "educationalBackground", width: "w-40 text-xs" },
-    { header: "Work Status", accessor: "workStatus", width: "w-32" },
+    { header: "NO.", accessor: (p, idx) => (currentPage - 1) * itemsPerPage + idx + 1, width: "w-12 text-center" },
+    { header: "NAME", accessor: (p) => formatName(p), width: "w-64 font-bold" },
+    { header: "CIVIL STATUS", accessor: (p) => (p.civilStatus || "").toUpperCase(), width: "w-32" },
+    { header: "YOUTH CLASS", accessor: (p) => displayArray(p.youthClassification), width: "w-40" },
+    { header: "AGE GROUP", accessor: "youthAgeGroup", width: "w-40" },
+    { header: "EMAIL", accessor: (p) => <a href={`mailto:${p.email}`} className="text-[#2E5E99] hover:underline truncate block">{p.email}</a>, width: "w-48 text-xs" },
+    { header: "CONTACT", accessor: "contact", width: "w-32" },
+    { header: "EDUCATION", accessor: "educationalBackground", width: "w-40 text-xs" },
+    { header: "WORK STATUS", accessor: "workStatus", width: "w-32" },
   ];
 
   return (
-    <div className="bg-white dark:bg-[#1e293b] rounded-xl shadow-lg border border-[#E7F0FA] dark:border-gray-700 flex flex-col h-full overflow-hidden transition-colors">
+    <div className="bg-[#1a1d21] dark:bg-[#1a1d21] rounded-xl shadow-lg border border-gray-800 flex flex-col h-full overflow-hidden transition-colors text-gray-300">
       
       {/* TOOLBAR */}
-      <div className="p-5 border-b border-[#E7F0FA] dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50 dark:bg-gray-800/50">
+      <div className="p-4 border-b border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#1a1d21]">
+        {/* Filters Panel (Collapsible) */}
+        {showFilters && (
+          <div className="absolute top-20 left-4 right-4 z-20 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-4 gap-4 animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between md:hidden col-span-1">
+               <h3 className="font-bold">Filters</h3>
+               <button onClick={() => setShowFilters(false)}><X size={16}/></button>
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-xs font-bold uppercase text-gray-500">Age</label>
+                <input
+                  type="number"
+                  value={filters.age}
+                  onChange={(e) => setFilters({...filters, age: e.target.value})}
+                  className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                  placeholder="e.g. 18"
+                />
+            </div>
+            <div className="space-y-1">
+                <label className="text-xs font-bold uppercase text-gray-500">Sex</label>
+                <select
+                  value={filters.sex}
+                  onChange={(e) => setFilters({...filters, sex: e.target.value})}
+                  className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                >
+                    <option value="">All</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+            <div className="space-y-1">
+                <label className="text-xs font-bold uppercase text-gray-500">Purok/Zone</label>
+                <input
+                  type="text"
+                  value={filters.purokZone}
+                  onChange={(e) => setFilters({...filters, purokZone: e.target.value})}
+                  className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                  placeholder="e.g. Zone 1"
+                />
+            </div>
+            <div className="space-y-1">
+                <label className="text-xs font-bold uppercase text-gray-500">Birthday</label>
+                <input
+                  type="date"
+                  value={filters.birthday}
+                  onChange={(e) => setFilters({...filters, birthday: e.target.value})}
+                  className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                />
+            </div>
+
+            <div className="md:col-span-4 flex justify-end gap-2 mt-2">
+                <button onClick={resetFilters} className="text-xs text-red-500 hover:underline">Reset</button>
+                <button onClick={() => setShowFilters(false)} className="px-4 py-1 bg-[#2E5E99] text-white rounded-lg text-sm">Apply</button>
+            </div>
+          </div>
+        )}
+
+        {/* Start of Toolbar Content */}
+        {/* Note: I'm trying to match the dark aesthetic from image, but keeping component flexible */}
+
         <div className="flex items-center gap-2">
-           <span className="bg-[#2E5E99] text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">
-             {profiles.length} Records
-           </span>
+            {/* Can show record count if needed, but image shows it in header */}
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7BA4D0]" />
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-none">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Search name or ID..."
+              placeholder="Search Name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-[#2E5E99] dark:text-white w-64 shadow-sm"
+              className="w-full sm:w-80 pl-9 pr-4 py-2.5 bg-[#25282c] border border-gray-700 rounded-xl text-sm focus:ring-1 focus:ring-[#2E5E99] text-white placeholder-gray-500 shadow-inner outline-none"
             />
           </div>
-          <button className="p-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 text-[#7BA4D0] hover:text-[#2E5E99] hover:border-[#2E5E99] rounded-xl transition-all shadow-sm">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`p-2.5 bg-[#25282c] border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 rounded-xl transition-all shadow-sm ${showFilters ? 'ring-2 ring-[#2E5E99]' : ''}`}
+            title="Filter"
+          >
             <Filter className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {/* TABLE */}
-      <div className="flex-1 overflow-auto relative">
+      <div className="flex-1 overflow-auto relative bg-[#1a1d21]">
         {isLoading && (
-            <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 z-10 flex items-center justify-center">
-                <Loader2 className="animate-spin text-blue-600" size={32} />
+            <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
+                <Loader2 className="animate-spin text-blue-500" size={32} />
             </div>
         )}
 
         <table className="w-full text-left border-collapse whitespace-nowrap">
-          <thead className="bg-[#E7F0FA]/50 dark:bg-gray-800/50 sticky top-0 z-10 backdrop-blur-sm">
+          <thead className="bg-[#1a1d21] sticky top-0 z-10">
             <tr>
               {columns.map((col, idx) => (
-                <th key={idx} className="px-4 py-3 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+                <th key={idx} className="px-4 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-800">
                     {col.header}
                 </th>
               ))}
-              <th className="px-4 py-3 text-xs font-bold text-[#7BA4D0] uppercase tracking-wider text-right sticky right-0 bg-[#f9fbfd] dark:bg-[#1e293b] border-b border-gray-200 dark:border-gray-700 shadow-l">
-                Actions
+              <th className="px-4 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-right sticky right-0 bg-[#1a1d21] border-b border-gray-800 shadow-xl">
+                ACTION
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E7F0FA] dark:divide-gray-700">
+          <tbody className="divide-y divide-gray-800">
             {paginatedProfiles.length > 0 ? (
-              paginatedProfiles.map((profile) => (
-                <tr key={profile.id} className="hover:bg-[#E7F0FA]/50 dark:hover:bg-gray-700/30 transition-colors group">
-                  {columns.map((col, idx) => (
-                    <td key={idx} className={`px-4 py-3 text-sm text-[#0D2440] dark:text-gray-300 ${col.width || ''}`}>
-                        {typeof col.accessor === 'function' ? col.accessor(profile) : (profile[col.accessor] || "---")}
+              paginatedProfiles.map((profile, idx) => (
+                <tr key={profile.id} className="hover:bg-[#25282c] transition-colors group">
+                  {columns.map((col, colIdx) => (
+                    <td key={colIdx} className={`px-4 py-4 text-xs font-medium text-gray-300 ${col.width || ''}`}>
+                        {typeof col.accessor === 'function' ? col.accessor(profile, idx) : (profile[col.accessor] || "---")}
                     </td>
                   ))}
 
                   {/* ACTIONS COLUMN (Sticky Right) */}
-                  <td className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-[#1e293b] group-hover:bg-[#f3f7fc] dark:group-hover:bg-[#252f45] transition-colors border-l border-gray-100 dark:border-gray-700 shadow-l">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
+                  <td className="px-4 py-3 text-right sticky right-0 bg-[#1a1d21] group-hover:bg-[#25282c] transition-colors border-l border-gray-800 shadow-xl">
+                    <div className="flex items-center justify-end gap-1">
+                      {/* Simplified Actions ... */}
+                       <div className="group/action relative">
+                            <button className="text-gray-500 hover:text-white p-1 rounded-full hover:bg-gray-700">
+                                <MoreHorizontal size={16} />
+                            </button>
+                            {/* Dropdown would go here, but for now specific buttons are better for UX unless strictly requested to hide them */}
+                       </div>
+
+                       {/* Explicit Actions (Keeping functional as before, but styled minimally) */}
+                       <button
                         onClick={() => onEdit && onEdit(profile.id)}
-                        className="p-1.5 text-[#2E5E99] bg-blue-50 hover:bg-[#2E5E99] hover:text-white rounded-lg transition-colors"
+                        className="p-1.5 text-blue-400 hover:bg-blue-900/30 rounded-lg transition-colors"
                         title="Edit"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-3.5 h-3.5" />
                       </button>
                       <button 
                         onClick={() => handleDelete(profile.id)}
                         disabled={isDeleting}
-                        className="p-1.5 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                        className="p-1.5 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors"
                         title="Delete"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
+
                     </div>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length + 1} className="px-6 py-12 text-center text-[#7BA4D0] dark:text-gray-500">
+                <td colSpan={columns.length + 1} className="px-6 py-20 text-center text-gray-500 text-sm">
                   {searchTerm ? `No profiles found matching "${searchTerm}"` : "No profiles added yet."}
                 </td>
               </tr>
@@ -162,24 +259,33 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
       </div>
 
       {/* FOOTER */}
-      <div className="p-4 border-t border-[#E7F0FA] dark:border-gray-700 flex justify-between items-center bg-[#FAFAFA] dark:bg-[#1e293b]">
-        <p className="text-xs font-medium text-[#7BA4D0]">
+      <div className="p-3 border-t border-gray-800 flex justify-between items-center bg-[#1a1d21]">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
           Showing {paginatedProfiles.length} of {filteredProfiles.length} records
         </p>
-        <div className="flex gap-2">
+
+        {/* Pagination Bar from Image (Line style) - approximating with standard buttons for now as image is vague on interactive elements */}
+        <div className="flex gap-1">
           <button 
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="p-2 border border-[#E7F0FA] dark:border-gray-600 rounded-lg hover:bg-white dark:hover:bg-gray-700 disabled:opacity-50"
+            className="p-1 text-gray-500 hover:text-white disabled:opacity-30"
           >
-            <ChevronLeft className="w-4 h-4 dark:text-white" />
+            <ChevronLeft className="w-4 h-4" />
           </button>
+          {/* Page Indicators */}
+          <div className="w-32 h-1 bg-gray-700 rounded-full self-center relative overflow-hidden">
+             <div
+               className="absolute top-0 left-0 h-full bg-gray-400 transition-all duration-300"
+               style={{ width: `${(currentPage / (totalPages || 1)) * 100}%` }}
+             ></div>
+          </div>
           <button 
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="p-2 border border-[#E7F0FA] dark:border-gray-600 rounded-lg hover:bg-white dark:hover:bg-gray-700 disabled:opacity-50"
+            className="p-1 text-gray-500 hover:text-white disabled:opacity-30"
           >
-            <ChevronRight className="w-4 h-4 dark:text-white" />
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>

@@ -23,14 +23,21 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { user, error: loginError } = await login(username, password);
+      // Trim inputs
+      const { user, error: loginError } = await login(username.trim(), password.trim());
       
       if (loginError) throw loginError;
 
+      // Ensure user exists before checking role
+      if (!user) throw new Error("Authentication successful but user data missing.");
+
+      // Normalize role for comparison
+      const role = user.role?.toUpperCase() || "";
+
       // Role Based Redirect
-      if (user.role === "MYDO_ADMIN") {
+      if (role === "MYDO_ADMIN") {
         navigate("/mydo/dashboard");
-      } else if (["SK_CHAIR", "SK_SEC"].includes(user.role)) {
+      } else if (["SK_CHAIR", "SK_SEC"].includes(role)) {
         // Pending Check is handled in AuthContext, but we can double check here
         if (user.status === 'Pending') {
           setError("Your account is pending approval from MYDO Admin.");
@@ -38,15 +45,19 @@ export default function Login() {
         }
         navigate("/sk/dashboard");
       } else {
-        setError("Unauthorized role.");
+        // Show role for debugging
+        setError(`Unauthorized role: '${user.role}'. Please contact support.`);
       }
 
     } catch (err) {
       console.error(err);
-      if (err.message.includes("Pending")) {
+      if (err.message && err.message.includes("Pending")) {
         setError("Your account is pending approval.");
-      } else {
+      } else if (err.message && err.message.includes("Invalid login credentials")) {
         setError("Invalid email or password.");
+      } else {
+        // Show actual error for debugging if possible, otherwise generic
+        setError(err.message || "An error occurred during sign in.");
       }
     } finally {
       setLoading(false);

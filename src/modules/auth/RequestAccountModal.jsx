@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { MydoService } from "../mydo/services/MYDOService";
-import { Barangays } from "../mydo/data/Barangays"; // Import static fallback
+import { BARANGAYS as Barangays } from "../mydo/data/Barangays"; // Import static fallback
 
 export default function RequestAccountModal({ isOpen, onClose }) {
   const [step, setStep] = useState(1);

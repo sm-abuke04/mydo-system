@@ -24,9 +24,7 @@ export const AuthProvider = ({ children }) => {
            await supabase.auth.signOut();
            throw new Error("Account Pending");
         }
-        const enrichedUser = { ...authUser, ...data };
-        setUser(enrichedUser);
-        return { user: enrichedUser };
+        setUser({ ...authUser, ...data });
       } else {
         // If authenticated in Supabase Auth but no profile in 'users' table
         // We must consider this an error because the app relies on 'role'
@@ -85,7 +83,7 @@ export const AuthProvider = ({ children }) => {
     // If fetchUserRole returned an error (like "Account Pending"), pass it up
     if (roleCheck?.error) return { error: roleCheck.error };
 
-    return { user: roleCheck.user };
+    return { user: data.user };
   };
 
   const logout = async () => {
