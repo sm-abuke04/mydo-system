@@ -48,13 +48,14 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
   const displayArray = (arr) => Array.isArray(arr) ? arr.join(", ") : arr;
 
   // --- TABLE COLUMNS CONFIG ---
-  // Requested: No, Region, Province, City/Municipality, Barangay, Name, Age, Birthday, Sex, Civil Status, Youth Classification, Youth Age Group, Email Address, Contact Number, Home Address (Purok/Zone), Highest Education Attainment, Work Status
+  // Requested: Move Purok/Zone next to Barangay
   const columns = [
     { header: "ID No.", accessor: "id", width: "w-16" },
     { header: "Region", accessor: "region", width: "w-32" },
     { header: "Province", accessor: "province", width: "w-32" },
     { header: "City/Mun.", accessor: "cityMunicipality", width: "w-32" },
     { header: "Barangay", accessor: "barangay", width: "w-32" },
+    { header: "Purok/Zone", accessor: "purokZone", width: "w-32" }, // MOVED HERE
     { header: "Name", accessor: (p) => `${p.firstName} ${p.lastName}`, width: "w-48 font-bold" },
     { header: "Age", accessor: "age", width: "w-16" },
     { header: "Birthday", accessor: "birthday", width: "w-32" },
@@ -64,7 +65,6 @@ export default function ProfileList({ profiles, onSearch, onDelete, onEdit, isLo
     { header: "Age Group", accessor: "youthAgeGroup", width: "w-32 text-xs" },
     { header: "Email", accessor: "email", width: "w-48 text-xs" },
     { header: "Contact No.", accessor: "contact", width: "w-32" },
-    { header: "Purok/Zone", accessor: "purokZone", width: "w-32" },
     { header: "Education", accessor: "educationalBackground", width: "w-40 text-xs" },
     { header: "Work Status", accessor: "workStatus", width: "w-32" },
   ];
